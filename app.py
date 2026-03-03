@@ -112,8 +112,7 @@ MIN_SCORE = st.sidebar.slider(
 )
 
 st.sidebar.markdown("### 📈 Demo Visual")
-show_workflow = st.sidebar.toggle("Knowledge Retrieval
-Before and After AI", value=True)
+show_workflow = st.sidebar.toggle("Knowledge Retrieval with AI", value=True)
 
 # Optional debug helpers
 show_pipeline = st.sidebar.toggle("Show pipeline log", value=True)
