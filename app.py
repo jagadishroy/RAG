@@ -262,7 +262,7 @@ def retrieve(query, docs, doc_vectors, df, N, top_k=5):
 # ─────────────────────────────────────────────
 # Claude Reader  ← FIXED model string
 # ─────────────────────────────────────────────
-MODEL = "claude-sonnet-4-5"   # ← corrected (was claude-sonnet-4-20250514)
+MODEL = "claude-sonnet-4-5-20250929"   # ← corrected (was claude-sonnet-4-20250514)
 
 def build_context(retrieved: list[dict]) -> str:
     parts = []
