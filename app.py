@@ -6,6 +6,7 @@ import math
 import time
 import re
 from pathlib import Path
+import anthropic
 from anthropic import Anthropic
 
 # ─────────────────────────────────────────────
@@ -33,246 +34,161 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
     background: linear-gradient(135deg, #1a3c5e 0%, #0d5c3a 100%);
     padding: 28px 32px; border-radius: 12px; margin-bottom: 24px; color: white;
 }
-.header-banner h1 { font-size: 28px; font-weight: 700; margin: 0 0 6px 0; letter-spacing: -0.5px; }
-.header-banner p  { font-size: 14px; opacity: 0.8; margin: 0; }
+.header-banner h1 { font-size: 28px; margin: 0; letter-spacing: .3px; }
+.header-banner p  { margin: 6px 0 0; opacity: .9; }
 
-.pipeline-step {
-    background: white; border: 1px solid #e4e0d8; border-radius: 8px;
-    padding: 14px 18px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+.card {
+    background: white; border-radius: 12px; padding: 18px 18px 14px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 10px rgba(0,0,0,0.04);
 }
-.pipeline-step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.step-num {
-    background: #1a3c5e; color: white; font-family: 'DM Mono', monospace;
-    font-size: 11px; font-weight: 700; width: 24px; height: 24px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.step-title { font-weight: 600; font-size: 13px; color: #1a1814; }
-.step-detail { font-size: 12px; color: #6b7280; margin-left: 34px; font-family: 'DM Mono', monospace; }
+.card h3 { margin: 0 0 10px; font-size: 16px; color: #14324a; }
+.mono { font-family: 'DM Mono', monospace; font-size: 12px; }
 
-.result-card {
-    background: white; border: 1px solid #e4e0d8; border-radius: 8px;
-    padding: 16px 20px; margin-bottom: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-left: 4px solid #0d5c3a;
+.badge {
+    display:inline-block; padding: 2px 8px; border-radius: 999px;
+    background: rgba(13,92,58,0.10); color: #0d5c3a; font-size: 12px;
+    border: 1px solid rgba(13,92,58,0.20);
+    margin-left: 8px;
 }
-.score-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-.score-badge { font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
-.score-sim      { background: #d1f0e6; color: #064e3b; }
-.score-conf-high { background: #d1f0e6; color: #064e3b; }
-.score-conf-med  { background: #fde68a; color: #92400e; }
-.score-conf-low  { background: #fde0e0; color: #991b1b; }
-.excerpt-box {
-    background: #f9f8f5; border: 1px solid #e4e0d8; border-radius: 6px;
-    padding: 10px 14px; margin-top: 10px; font-size: 12px; color: #4a4640;
-    line-height: 1.6; font-style: italic;
+.pill {
+    display:inline-block; padding: 6px 10px; border-radius: 999px;
+    background: rgba(26,60,94,0.08); color: #1a3c5e; font-size: 12px;
+    border: 1px solid rgba(26,60,94,0.15);
+    margin-right: 6px; margin-bottom: 6px;
 }
 
-.answer-box {
-    background: white; border: 1px solid #b8d4eb; border-radius: 10px;
-    padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid #1a3c5e;
-}
-.conf-badge-lg {
-    display: inline-block; padding: 4px 14px; border-radius: 20px;
-    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 700;
-    letter-spacing: 1px; margin-bottom: 12px;
-}
-.conf-high { background: #d1f0e6; color: #064e3b; }
-.conf-med  { background: #fde68a; color: #92400e; }
-.conf-low  { background: #fde0e0; color: #991b1b; }
-
-.metric-tile {
-    background: white; border: 1px solid #e4e0d8; border-radius: 8px;
-    padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-.metric-val   { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 700; color: #1a3c5e; }
-.metric-label { font-size: 11px; color: #6b7280; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-section[data-testid="stSidebar"] { background: #1a3c5e !important; }
-section[data-testid="stSidebar"] * { color: rgba(255,255,255,0.9) !important; }
+.small-note { color: rgba(0,0,0,0.55); font-size: 12px; }
+hr { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 18px 0; }
 </style>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# Data Loading
+# Header
+# ─────────────────────────────────────────────
+st.markdown("""
+<div class="header-banner">
+  <h1>InsureIQ <span class="badge">RAG Claims Assistant</span></h1>
+  <p>Ask questions about policy documents. Answers cite the retrieved sources.</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# Sidebar — settings & API key
+# ─────────────────────────────────────────────
+st.sidebar.title("⚙️ Settings")
+
+QUERY_LIMIT = 10
+if "query_count" not in st.session_state:
+    st.session_state.query_count = 0
+
+st.sidebar.markdown("**Session query limit:**")
+st.sidebar.progress(min(st.session_state.query_count / QUERY_LIMIT, 1.0))
+st.sidebar.caption(f"{st.session_state.query_count}/{QUERY_LIMIT} queries used")
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🔑 Anthropic API Key")
+
+# Prefer Streamlit Secrets → env var → manual input
+api_key = None
+if hasattr(st, "secrets") and "ANTHROPIC_API_KEY" in st.secrets:
+    api_key = st.secrets["ANTHROPIC_API_KEY"]
+elif os.getenv("ANTHROPIC_API_KEY"):
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+
+manual_key = st.sidebar.text_input(
+    "Enter API key (optional)",
+    type="password",
+    help="If not set in Streamlit Secrets, you can paste it here for this session.",
+)
+if manual_key.strip():
+    api_key = manual_key.strip()
+
+# Model choice: default to a current stable Sonnet alias; override via env if desired.
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+MAX_CONTEXT_CHARS = int(os.getenv("MAX_CONTEXT_CHARS", "24000"))  # rough safety cap
+
+st.sidebar.markdown("### 🧠 Model")
+st.sidebar.code(MODEL)
+
+st.sidebar.markdown("### 🧾 Retrieval settings")
+TOP_K = st.sidebar.slider("Top-k chunks", min_value=3, max_value=15, value=8, step=1)
+MIN_SCORE = st.sidebar.slider("Min score threshold", min_value=0.0, max_value=1.0, value=0.0, step=0.05)
+
+# ─────────────────────────────────────────────
+# Data / corpus loading (simple local JSON store)
 # ─────────────────────────────────────────────
 DATA_DIR = Path(__file__).parent / "data"
+DEFAULT_CORPUS_PATH = DATA_DIR / "corpus.json"
 
-DATASET_FILES = {
-    "Eligibility Rules":           "eligibility_rules.json",
-    "Pre-existing Conditions":     "preexisting_conditions.json",
-    "Network & Provider Rules":    "network_provider_rules.json",
-    "Claim Procedures & Limits":   "claim_procedures.json",
-    "Grace Period & Lapse Policies": "grace_period_lapse.json",
-    "Cardiac & Surgical Coverage": "cardiac_surgical_coverage.json",
-}
+def load_corpus(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
 
-DATASET_ICONS = {
-    "Eligibility Rules":           "📋",
-    "Pre-existing Conditions":     "🩺",
-    "Network & Provider Rules":    "🏥",
-    "Claim Procedures & Limits":   "📄",
-    "Grace Period & Lapse Policies": "⏳",
-    "Cardiac & Surgical Coverage": "❤️",
-}
-
-@st.cache_data
-def load_all_documents():
-    docs = []
-    for dataset_name, filename in DATASET_FILES.items():
-        filepath = DATA_DIR / filename
-        if not filepath.exists():
-            continue
-        with open(filepath, "r") as f:
-            data = json.load(f)
-        for record in data.get("records", []):
-            text_parts = [
-                record.get("title", ""),
-                record.get("rule", ""),
-                " ".join(record.get("tags", [])),
-                record.get("subcategory", ""),
-                " ".join(record.get("exclusions", [])),
-            ]
-            conditions = record.get("conditions", {})
-            if isinstance(conditions, dict):
-                for k, v in conditions.items():
-                    if isinstance(v, str):
-                        text_parts.append(f"{k}: {v}")
-                    elif isinstance(v, list):
-                        text_parts.append(f"{k}: {', '.join(str(i) for i in v)}")
-            full_text = " ".join(filter(None, text_parts)).lower()
-            docs.append({
-                "id":             record.get("id", ""),
-                "title":          record.get("title", ""),
-                "rule":           record.get("rule", ""),
-                "tags":           record.get("tags", []),
-                "exclusions":     record.get("exclusions", []),
-                "conditions":     record.get("conditions", {}),
-                "dataset":        dataset_name,
-                "filename":       filename,
-                "category":       record.get("category", ""),
-                "subcategory":    record.get("subcategory", ""),
-                "full_text":      full_text,
-                "effective_date": record.get("effective_date", ""),
-            })
-    return docs
+corpus = load_corpus(DEFAULT_CORPUS_PATH)
 
 # ─────────────────────────────────────────────
-# RAG Engine — TF-IDF cosine similarity
+# Minimal retrieval utilities (simple token overlap score)
 # ─────────────────────────────────────────────
+STOPWORDS = set("""
+a an the and or but if then else this that those these to from in on at for of with without
+is are was were be been being as by it its they them their you your i we our he she his her
+""".split())
 
 def tokenize(text: str) -> list[str]:
-    text = text.lower()
-    text = re.sub(r'[^a-z0-9\s]', ' ', text)
-    tokens = text.split()
-    stopwords = {
-        'a','an','the','is','are','was','were','be','been','being',
-        'have','has','had','do','does','did','will','would','could',
-        'should','may','might','shall','can','need','must','ought',
-        'i','me','my','we','our','you','your','he','she','it','they',
-        'them','their','this','that','these','those','what','which',
-        'who','whom','when','where','why','how','all','both','each',
-        'few','more','most','other','some','such','no','nor','not',
-        'only','own','same','so','than','too','very','just','of',
-        'at','by','for','with','about','against','between','into',
-        'through','during','before','after','above','below','to',
-        'from','up','down','in','out','on','off','over','under',
-        'again','further','then','once','and','but','or','if','as'
-    }
-    return [t for t in tokens if t not in stopwords and len(t) > 2]
+    tokens = re.findall(r"[a-zA-Z0-9]+", (text or "").lower())
+    return [t for t in tokens if t and t not in STOPWORDS]
 
-def build_tfidf(docs: list[dict]):
-    N = len(docs)
-    df = {}
-    doc_tokens_list = []
-    for doc in docs:
-        tokens = tokenize(doc["full_text"])
-        token_set = set(tokens)
-        doc_tokens_list.append(tokens)
-        for t in token_set:
-            df[t] = df.get(t, 0) + 1
-    vectors = []
-    for tokens in doc_tokens_list:
-        tf = {}
-        for t in tokens:
-            tf[t] = tf.get(t, 0) + 1
-        tfidf = {}
-        for t, freq in tf.items():
-            idf = math.log((N + 1) / (df.get(t, 0) + 1)) + 1
-            tfidf[t] = (freq / len(tokens)) * idf
-        vectors.append(tfidf)
-    return vectors, df, N
-
-def cosine_sim(vec_a: dict, vec_b: dict) -> float:
-    common = set(vec_a.keys()) & set(vec_b.keys())
-    if not common:
+def score_overlap(query_tokens: list[str], doc_tokens: list[str]) -> float:
+    if not query_tokens or not doc_tokens:
         return 0.0
-    dot   = sum(vec_a[t] * vec_b[t] for t in common)
-    mag_a = math.sqrt(sum(v*v for v in vec_a.values()))
-    mag_b = math.sqrt(sum(v*v for v in vec_b.values()))
-    if mag_a == 0 or mag_b == 0:
-        return 0.0
-    return dot / (mag_a * mag_b)
+    q = set(query_tokens)
+    d = set(doc_tokens)
+    return len(q.intersection(d)) / max(1, len(q))
 
-def compute_query_vector(query: str, df: dict, N: int) -> dict:
-    tokens = tokenize(query)
-    tf = {}
-    for t in tokens:
-        tf[t] = tf.get(t, 0) + 1
-    tfidf = {}
-    for t, freq in tf.items():
-        idf = math.log((N + 1) / (df.get(t, 0) + 1)) + 1
-        tfidf[t] = (freq / len(tokens)) * idf
-    return tfidf
-
-def get_verbatim_score(query: str, rule_text: str) -> float:
-    q_tokens = set(tokenize(query))
-    r_tokens = set(tokenize(rule_text))
-    if not q_tokens:
-        return 0.0
-    return len(q_tokens & r_tokens) / len(q_tokens)
-
-def confidence_label(sim_score: float) -> str:
-    if sim_score >= 0.35:
-        return "HIGH"
-    elif sim_score >= 0.18:
-        return "MEDIUM"
-    return "LOW"
-
-def retrieve(query, docs, doc_vectors, df, N, top_k=5):
-    query_vec = compute_query_vector(query, df, N)
+def retrieve(query: str, docs: list[dict], top_k: int = 8) -> list[dict]:
+    qt = tokenize(query)
     scored = []
-    for doc, vec in zip(docs, doc_vectors):
-        sim = cosine_sim(query_vec, vec)
-        q_tokens    = set(tokenize(query))
-        tag_boost   = 0.05 * len(q_tokens & set(tokenize(" ".join(doc["tags"]))))
-        title_boost = 0.08 * len(q_tokens & set(tokenize(doc["title"])))
-        final_score = min(sim + tag_boost + title_boost, 1.0)
-        scored.append({
-            **doc,
-            "similarity_score": round(final_score, 4),
-            "raw_sim":          round(sim, 4),
-            "verbatim_score":   round(get_verbatim_score(query, doc["rule"]), 4),
-            "confidence":       confidence_label(final_score),
-            "rank":             0,
+    for i, d in enumerate(docs):
+        text = d.get("text", "") or ""
+        dt = tokenize(text)
+        s = score_overlap(qt, dt)
+        scored.append((s, i, d))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    out = []
+    for s, i, d in scored[:top_k]:
+        out.append({
+            "id": d.get("id", i),
+            "title": d.get("title", f"Document {i+1}"),
+            "text": d.get("text", ""),
+            "score": float(s),
+            "source": d.get("source", d.get("title", f"Document {i+1}")),
         })
-    scored.sort(key=lambda x: x["similarity_score"], reverse=True)
-    for i, r in enumerate(scored[:top_k]):
-        r["rank"] = i + 1
-    return scored[:top_k]
+    return out
 
 # ─────────────────────────────────────────────
-# Claude Reader  ← FIXED model string
+# Prompt context builder
 # ─────────────────────────────────────────────
-MODEL = "claude-haiku-4-5-20251001"   # ← corrected (was claude-sonnet-4-20250514)
-
 def build_context(retrieved: list[dict]) -> str:
     parts = []
-    for r in retrieved:
+    for idx, r in enumerate(retrieved, start=1):
+        title = r.get("title", f"Source {idx}")
+        source = r.get("source", title)
+        text = (r.get("text") or "").strip()
         parts.append(
-            f"[SOURCE {r['rank']}: {r['title']} | Dataset: {r['dataset']} | ID: {r['id']}]\n"
-            f"{r['rule']}\n"
-            f"Exclusions: {'; '.join(r['exclusions']) if r['exclusions'] else 'None'}\n"
+            f"[SOURCE {idx}] {title}\n"
+            f"(origin: {source})\n"
+            f"{text}\n"
         )
-    return "\n---\n".join(parts)
+    joined = "\n---\n".join(parts)
+    # Rough guardrail: keep prompt sizes manageable (tokenization varies by model)
+    if len(joined) > MAX_CONTEXT_CHARS:
+        joined = joined[:MAX_CONTEXT_CHARS] + "\n\n[TRUNCATED: context shortened for model input safety]"
+    return joined
 
 def generate_answer(query: str, retrieved: list[dict], client: Anthropic) -> str:
     context = build_context(retrieved)
@@ -300,184 +216,92 @@ Relevant Policy Documents:
 
 Please provide a comprehensive, accurate answer based strictly on the above policy documents."""
 
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=1000,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_message}]
-    )
-    return response.content[0].text
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=1000,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}],
+        )
+        return response.content[0].text
+    except anthropic.APIStatusError as e:
+        # 4xx/5xx with structured payload. Streamlit may redact the original message;
+        # surface enough detail to debug without leaking secrets.
+        st.error(f"Anthropic API error {e.status_code}: {getattr(e, 'message', str(e))}")
+        try:
+            st.code(getattr(e, "response", None))
+        except Exception:
+            pass
+        raise
+    except anthropic.APIError as e:
+        st.error(f"Anthropic API error: {str(e)}")
+        raise
 
 # ─────────────────────────────────────────────
 # Sample Queries
 # ─────────────────────────────────────────────
 SAMPLE_QUERIES = [
-    {"label": "🫀 Diabetic cardiac surgery, out-of-network",
-     "query": "I'm 45 years old with Type 2 diabetes and my doctor is recommending a $75,000 cardiac surgery at an out-of-network hospital. What will my insurance cover and what are my total costs?"},
-    {"label": "⏰ COBRA grace period after job loss",
-     "query": "I lost my job last month and haven't paid my COBRA premium yet. How long do I have to pay and what happens if I miss the deadline? Will my claims still be covered?"},
-    {"label": "🏥 Pre-existing condition with insurance switch",
-     "query": "I have a history of cancer and I'm switching to a new insurance plan. Can they exclude my cancer treatments as a pre-existing condition? What protections do I have?"},
-    {"label": "❤️ Emergency cardiac procedure coverage",
-     "query": "I had an emergency cardiac catheterization at an out-of-network hospital last week. Will my insurance cover this? Do I owe balance billing charges?"},
-    {"label": "⚖️ Bariatric surgery eligibility with diabetes",
-     "query": "I have Type 2 diabetes and a BMI of 37. Am I eligible for bariatric surgery coverage? What are the requirements I need to meet before the insurance will approve it?"},
-    {"label": "🔄 Coverage reinstatement after lapse",
-     "query": "My health insurance lapsed 45 days ago because I missed premium payments. Can I get reinstated? Will I have a new waiting period or pre-existing condition exclusions?"},
-    {"label": "🏆 Center of Excellence for heart bypass",
-     "query": "My doctor recommended CABG (bypass surgery). What are my cost differences between a regular in-network hospital versus a Center of Excellence? Should I travel to a COE?"},
-    {"label": "📋 Mental health parity and prior auth",
-     "query": "I need inpatient psychiatric treatment. Do I need prior authorization? Are there limits on how many days are covered? Does my plan have to cover mental health the same as medical?"},
+    {"label": "🏥 In-network vs out-of-network cost", "q": "What is my out-of-network financial exposure for a surgery?"},
+    {"label": "💊 Prescription coverage question", "q": "Does the plan cover insulin and what are the copays?"},
+    {"label": "🧾 Deductible & coinsurance", "q": "How do deductible and coinsurance apply for an MRI?"},
+    {"label": "🚑 ER coverage", "q": "If I go to the emergency room out-of-network, is it covered?"},
 ]
 
 # ─────────────────────────────────────────────
-# Session State
+# Main layout
 # ─────────────────────────────────────────────
-for key, default in [
-    ("query", ""),
-    ("results", None),
-    ("answer", None),
-    ("pipeline_log", []),
-    ("top_k", 5),
-    ("last_query_time_ms", None),
-    ("query_count", 0),          # ← rate-limit counter
-]:
-    if key not in st.session_state:
-        st.session_state[key] = default
+left, right = st.columns([1.1, 0.9], gap="large")
 
-QUERY_LIMIT = 5   # max queries per browser session
+with left:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("### 💬 Ask a policy question")
 
-# ─────────────────────────────────────────────
-# Load data + build index
-# ─────────────────────────────────────────────
-docs = load_all_documents()
+    # Sample queries
+    sq_cols = st.columns(2)
+    for i, item in enumerate(SAMPLE_QUERIES):
+        with sq_cols[i % 2]:
+            if st.button(item["label"]):
+                st.session_state.query = item["q"]
 
-@st.cache_data
-def build_index(doc_texts):
-    return build_tfidf(docs)
-
-doc_vectors, df_map, N_docs = build_index([d["full_text"] for d in docs])
-
-# ─────────────────────────────────────────────
-# Sidebar
-# ─────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("## 🏥 InsureIQ")
-    st.markdown("**RAG-Powered Claims Assistant**")
-    st.markdown("---")
-
-    # ── API Key: Secrets first, manual fallback ──
-    st.markdown("### 🔑 API Access")
-    try:
-        api_key = st.secrets["ANTHROPIC_API_KEY"]
-        st.markdown("✅ **Connected** — API key loaded from secrets")
-    except (KeyError, FileNotFoundError):
-        api_key = st.text_input(
-            "Enter your Anthropic API key",
-            type="password",
-            placeholder="sk-ant-...",
-            help="Get your key from console.anthropic.com"
-        )
-        if api_key:
-            st.markdown("✅ Key entered manually")
-
-    st.markdown("---")
-
-    # ── Session usage indicator ──
-    remaining = QUERY_LIMIT - st.session_state.query_count
-    st.markdown("### 📊 Session Usage")
-    st.markdown(f"**{st.session_state.query_count} / {QUERY_LIMIT}** queries used this session")
-    if remaining <= 1:
-        st.warning(f"⚠️ {remaining} query remaining. Refresh page to reset.")
-    st.markdown("---")
-
-    # ── Search settings ──
-    st.markdown("### ⚙️ Search Settings")
-    top_k = st.slider("Top results to retrieve", min_value=3, max_value=8, value=5)
-    st.session_state.top_k = top_k
-
-    st.markdown("---")
-
-    # ── Knowledge base summary ──
-    st.markdown("### 📚 Knowledge Base")
-    for name, icon in DATASET_ICONS.items():
-        count = sum(1 for d in docs if d["dataset"] == name)
-        st.markdown(f"{icon} **{name}** — {count} rules")
-
-    st.markdown("---")
-    st.markdown(f"**Total indexed rules:** {len(docs)}")
-    st.markdown(f"**Vocabulary size:** {len(df_map):,} terms")
-
-    st.markdown("---")
-    st.markdown("### 📖 About")
-    st.markdown("""
-This app demonstrates a **full RAG pipeline**:
-1. **Retrieval** — TF-IDF cosine similarity across 6 JSON policy datasets
-2. **Reader** — Claude Sonnet synthesizes the final answer
-
-No vector database required — pure Python retrieval engine.
-    """)
-
-# ─────────────────────────────────────────────
-# Main Content
-# ─────────────────────────────────────────────
-st.markdown("""
-<div class="header-banner">
-    <h1>🏥 InsureIQ — Insurance RAG Claims Assistant</h1>
-    <p>Ask any complex insurance question. The system retrieves relevant policy rules, scores them by relevance, and generates a precise answer using Claude AI.</p>
-</div>
-""", unsafe_allow_html=True)
-
-# ── Metrics row ──
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.markdown(f'<div class="metric-tile"><div class="metric-val">{len(docs)}</div><div class="metric-label">Policy Rules Indexed</div></div>', unsafe_allow_html=True)
-with col2:
-    st.markdown('<div class="metric-tile"><div class="metric-val">6</div><div class="metric-label">JSON Datasets</div></div>', unsafe_allow_html=True)
-with col3:
-    st.markdown(f'<div class="metric-tile"><div class="metric-val">{len(df_map):,}</div><div class="metric-label">Vocabulary Terms</div></div>', unsafe_allow_html=True)
-with col4:
-    timing_display = f"{st.session_state.last_query_time_ms}ms" if st.session_state.last_query_time_ms else "—"
-    st.markdown(f'<div class="metric-tile"><div class="metric-val">{timing_display}</div><div class="metric-label">Last Query Time</div></div>', unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-# ── Two-column layout ──
-left_col, right_col = st.columns([3, 2], gap="large")
-
-with left_col:
-    st.markdown("### 💬 Ask a Claims Question")
     query_input = st.text_area(
-        label="Your question",
-        value=st.session_state.query,
-        height=110,
-        placeholder="E.g. I'm 45 years old with diabetes and need cardiac surgery at an out-of-network hospital...",
-        label_visibility="collapsed"
+        "Your question",
+        value=st.session_state.get("query", ""),
+        height=120,
+        placeholder="E.g., Is a knee replacement covered if done out-of-network? What will I owe?",
     )
-    btn_col1, btn_col2 = st.columns([2, 1])
-    with btn_col1:
-        search_btn = st.button("🔍  Run RAG Pipeline", type="primary", use_container_width=True)
-    with btn_col2:
-        clear_btn  = st.button("✕  Clear", use_container_width=True)
 
-    if clear_btn:
-        st.session_state.query        = ""
-        st.session_state.results      = None
-        st.session_state.answer       = None
-        st.session_state.pipeline_log = []
-        st.rerun()
+    run_btn = st.button("🔎 Retrieve + Answer", type="primary", use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-with right_col:
-    st.markdown("### ⚡ Sample Questions")
-    for sample in SAMPLE_QUERIES:
-        if st.button(sample["label"], key=f"sample_{sample['label']}", use_container_width=True):
-            st.session_state.query = sample["query"]
-            st.rerun()
+    st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
+    st.markdown("### 📚 Corpus status")
+    if corpus:
+        st.write(f"Loaded **{len(corpus)}** document chunks from `data/corpus.json`.")
+        st.caption("If you see weak retrieval, ensure your corpus chunks contain enough policy text and metadata.")
+    else:
+        st.warning("No corpus loaded. Add `data/corpus.json` with policy chunks (list of {id,title,text,source}).")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with right:
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown("### 🧠 Answer")
+    answer_box = st.empty()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
+    st.markdown("### 🧩 Retrieved Sources")
+    retrieved_box = st.empty()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
+    st.markdown("### 🧪 Pipeline Log")
+    log_box = st.empty()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# Run pipeline on button click
+# Run pipeline
 # ─────────────────────────────────────────────
-if search_btn and query_input.strip():
+if run_btn:
     if not api_key:
         st.error("⚠️ No API key configured. Add ANTHROPIC_API_KEY to Streamlit Secrets or enter it in the sidebar.")
     elif st.session_state.query_count >= QUERY_LIMIT:
@@ -486,226 +310,72 @@ if search_btn and query_input.strip():
             "Refresh the page to start a new session."
         )
     else:
+        st.session_state.query_count += 1
         st.session_state.query = query_input
+
         client = Anthropic(api_key=api_key)
 
-        t_start      = time.time()
+        t_start = time.time()
         pipeline_log = []
 
         # Step 1 — Tokenize
         tokens = tokenize(query_input)
         pipeline_log.append({
-            "step": 1, "icon": "🔤", "name": "Query Tokenization",
-            "detail": f"Extracted {len(tokens)} tokens: {', '.join(tokens[:12])}{'...' if len(tokens) > 12 else ''}",
+            "step": "tokenize",
+            "tokens_preview": tokens[:20],
+            "token_count": len(tokens),
         })
 
-        # Step 2 — Query vector
-        query_vec = compute_query_vector(query_input, df_map, N_docs)
+        # Step 2 — Retrieve
+        retrieved = retrieve(query_input, corpus, top_k=TOP_K)
+        # Apply score filter
+        retrieved_f = [r for r in retrieved if r["score"] >= MIN_SCORE]
         pipeline_log.append({
-            "step": 2, "icon": "🔢", "name": "TF-IDF Query Embedding",
-            "detail": f"Query vector: {len(query_vec)} unique terms | Vocab coverage: {len(query_vec)}/{len(df_map)}",
+            "step": "retrieve",
+            "requested_top_k": TOP_K,
+            "min_score": MIN_SCORE,
+            "returned": len(retrieved),
+            "kept_after_filter": len(retrieved_f),
+            "top_scores": [round(r["score"], 3) for r in retrieved[:min(5, len(retrieved))]],
         })
 
-        # Step 3 — Cosine search
+        # Show retrieved in UI
+        if retrieved_f:
+            with retrieved_box.container():
+                for i, r in enumerate(retrieved_f, start=1):
+                    st.markdown(
+                        f"**[SOURCE {i}] {r['title']}**  \n"
+                        f"<span class='mono'>score={r['score']:.3f} | origin={r.get('source','')}</span>",
+                        unsafe_allow_html=True,
+                    )
+                    st.caption((r.get("text", "") or "")[:300] + ("..." if len((r.get("text","") or "")) > 300 else ""))
+                    st.write("")
+        else:
+            retrieved_box.warning("No sources passed the score threshold. Try lowering the min score or improving corpus chunking.")
+
+        # Step 3 — Generate answer (only if we have some evidence)
+        if retrieved_f:
+            try:
+                answer = generate_answer(query_input, retrieved_f, client)
+                answer_box.markdown(answer)
+            except Exception:
+                # Error details are already displayed in generate_answer()
+                answer_box.error("Generation failed. See the error above for details.")
+        else:
+            answer_box.info("No answer generated because no sources were retrieved with sufficient score.")
+
         pipeline_log.append({
-            "step": 3, "icon": "📐", "name": "Cosine Similarity Search",
-            "detail": f"Dot products against {len(docs)} document vectors across {len(df_map):,} term vocab...",
+            "step": "timing",
+            "seconds_total": round(time.time() - t_start, 3),
         })
 
-        # Step 4 — Top-K retrieval
-        retrieved  = retrieve(query_input, docs, doc_vectors, df_map, N_docs, top_k=top_k)
-        top_score  = retrieved[0]["similarity_score"] if retrieved else 0
-        pipeline_log.append({
-            "step": 4, "icon": "🎯", "name": f"Top-{top_k} Result Retrieval",
-            "detail": f"Best score: {top_score:.4f} | Sources: {', '.join(set(r['dataset'] for r in retrieved[:3]))}",
-        })
-
-        # Step 5 — Verbatim scoring
-        score_parts = [
-            f'#{r["rank"]} sim={r["similarity_score"]:.3f} verb={r["verbatim_score"]:.2f} [{r["confidence"]}]'
-            for r in retrieved[:3]
-        ]
-        pipeline_log.append({
-            "step": 5, "icon": "📊", "name": "Verbatim & Confidence Scoring",
-            "detail": " | ".join(score_parts),
-        })
-
-        # Step 6 — Claude reader
-        pipeline_log.append({
-            "step": 6, "icon": "🤖", "name": f"Claude Reader ({MODEL})",
-            "detail": f"Sending {len(retrieved)} passages ({sum(len(r['rule']) for r in retrieved):,} chars) to {MODEL}...",
-        })
-
-        with st.spinner("Generating answer with Claude..."):
-            answer = generate_answer(query_input, retrieved, client)
-
-        elapsed_ms = int((time.time() - t_start) * 1000)
-        pipeline_log.append({
-            "step": 7, "icon": "✅", "name": "Pipeline Complete",
-            "detail": f"Total: {elapsed_ms}ms | Retrieval: ~{int(elapsed_ms*0.05)}ms | Generation: ~{int(elapsed_ms*0.95)}ms",
-        })
-
-        st.session_state.results             = retrieved
-        st.session_state.answer              = answer
-        st.session_state.pipeline_log        = pipeline_log
-        st.session_state.last_query_time_ms  = elapsed_ms
-        st.session_state.query_count        += 1   # ← increment rate-limit counter
-        st.rerun()
-
-elif search_btn and not query_input.strip():
-    st.warning("Please enter a question first.")
+        log_box.json(pipeline_log)
 
 # ─────────────────────────────────────────────
-# Display results
+# Footer
 # ─────────────────────────────────────────────
-if st.session_state.results is not None:
-    st.markdown("---")
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🤖 AI Answer",
-        "📊 Retrieved Documents",
-        "⚙️ Pipeline Trace",
-        "📈 Workflow Visual",
-    ])
-
-    results = st.session_state.results
-    answer  = st.session_state.answer
-
-    # ── Tab 1: AI Answer ──
-    with tab1:
-        top_conf   = results[0]["confidence"] if results else "LOW"
-        conf_class = {"HIGH": "conf-high", "MEDIUM": "conf-med", "LOW": "conf-low"}.get(top_conf, "conf-low")
-        conf_emoji = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}.get(top_conf, "🔴")
-
-        st.markdown(f"""
-<div class="answer-box">
-<span class="conf-badge-lg {conf_class}">{conf_emoji} {top_conf} CONFIDENCE</span>
-<div style="font-size:13px;color:#374151;line-height:1.7;">{answer.replace(chr(10), '<br>')}</div>
-</div>
-""", unsafe_allow_html=True)
-
-        st.markdown("<br>**Sources consulted:**", unsafe_allow_html=True)
-        source_cols = st.columns(min(len(results), 5))
-        for col, res in zip(source_cols, results):
-            icon = DATASET_ICONS.get(res["dataset"], "📄")
-            with col:
-                st.markdown(f"""
-<div style="background:white;border:1px solid #e4e0d8;border-radius:6px;padding:8px 10px;text-align:center;font-size:11px;">
-<div style="font-size:18px;">{icon}</div>
-<div style="font-weight:600;color:#1a1814;margin-top:4px;">{res['id']}</div>
-<div style="color:#6b7280;font-size:10px;">{res['dataset']}</div>
-</div>
-""", unsafe_allow_html=True)
-
-    # ── Tab 2: Retrieved Documents ──
-    with tab2:
-        st.markdown(f"**{len(results)} most relevant policy rules retrieved:**")
-        for r in results:
-            conf_cls   = {"HIGH": "score-conf-high", "MEDIUM": "score-conf-med", "LOW": "score-conf-low"}.get(r["confidence"], "score-conf-low")
-            conf_emoji = {"HIGH": "🟢", "MEDIUM": "🟡", "LOW": "🔴"}.get(r["confidence"], "🔴")
-            icon       = DATASET_ICONS.get(r["dataset"], "📄")
-
-            with st.expander(f"#{r['rank']} — {r['title']}", expanded=(r["rank"] <= 2)):
-                col_a, col_b = st.columns([3, 1])
-                with col_a:
-                    st.markdown(f"**{icon} {r['dataset']}** — `{r['id']}`")
-                    st.markdown(f"*{r['category']} / {r['subcategory']}*")
-                with col_b:
-                    st.markdown(f"""
-<div class="score-row">
-<span class="score-badge score-sim">Sim: {r['similarity_score']:.3f}</span>
-<span class="score-badge score-sim">Verb: {r['verbatim_score']:.2f}</span>
-<span class="score-badge {conf_cls}">{conf_emoji} {r['confidence']}</span>
-</div>
-""", unsafe_allow_html=True)
-
-                excerpt = r["rule"][:500] + ("..." if len(r["rule"]) > 500 else "")
-                st.markdown(f'<div class="excerpt-box">{excerpt}</div>', unsafe_allow_html=True)
-
-                if r["exclusions"]:
-                    st.markdown("**⛔ Exclusions:**")
-                    for ex in r["exclusions"]:
-                        st.markdown(f"- {ex}")
-
-                if r.get("tags"):
-                    tags_html = " ".join([
-                        f'<span style="background:#f0f0eb;border:1px solid #e4e0d8;padding:2px 8px;'
-                        f'border-radius:4px;font-size:10px;font-family:monospace;">{t}</span>'
-                        for t in r["tags"][:8]
-                    ])
-                    st.markdown(f"**Tags:** {tags_html}", unsafe_allow_html=True)
-
-    # ── Tab 3: Pipeline Trace ──
-    with tab3:
-        st.markdown("**Full RAG pipeline execution trace:**")
-        for log in st.session_state.pipeline_log:
-            st.markdown(f"""
-<div class="pipeline-step">
-<div class="pipeline-step-header">
-<span style="font-size:18px;">{log['icon']}</span>
-<span class="step-title">Step {log['step']}: {log['name']}</span>
-</div>
-<div class="step-detail">{log['detail']}</div>
-</div>
-""", unsafe_allow_html=True)
-
-        st.markdown("<br>**📊 Similarity Score Distribution:**", unsafe_allow_html=True)
-        import pandas as pd
-        df_chart = pd.DataFrame({
-            "Document":        [r["title"][:40] for r in results],
-            "Similarity Score": [r["similarity_score"] for r in results],
-            "Verbatim Score":  [r["verbatim_score"] for r in results],
-            "Confidence":      [r["confidence"] for r in results],
-            "Dataset":         [r["dataset"] for r in results],
-        })
-        st.dataframe(df_chart, use_container_width=True, hide_index=True)
-        st.bar_chart(
-            pd.DataFrame(
-                {"Similarity": [r["similarity_score"] for r in results]},
-                index=[f"#{r['rank']} {r['id']}" for r in results]
-            )
-        )
-
-    # ── Tab 4: Workflow Visual (embedded HTML) ──
-    with tab4:
-        st.markdown("**AI Claims Processing — Workflow Comparison**")
-        html_path = Path(__file__).parent / "ai_workflow_visuals.html"
-        if html_path.exists():
-            html_content = html_path.read_text(encoding="utf-8")
-            components.html(html_content, height=900, scrolling=True)
-        else:
-            st.warning(
-                "⚠️ `ai_workflow_visuals.html` not found. "
-                "Place the file in the same directory as `app.py` to display the workflow visual."
-            )
-
-elif st.session_state.query == "":
-    # ── Welcome state ──
-    st.markdown("---")
-
-    # Show the workflow visual on the landing page too
-    welcome_tab1, welcome_tab2 = st.tabs(["🏠 Welcome", "📈 Workflow Visual"])
-
-    with welcome_tab1:
-        st.markdown("""
-<div style="text-align:center;padding:40px 20px;">
-<div style="font-size:48px;margin-bottom:16px;">🏥</div>
-<h3 style="color:#1a3c5e;margin-bottom:8px;">Ready to answer your insurance questions</h3>
-<p style="color:#6b7280;font-size:14px;">
-Enter a question above or click a sample query to see the full RAG pipeline in action.<br>
-The system retrieves relevant policy rules using TF-IDF cosine similarity,
-then uses Claude to synthesize a precise answer.
-</p>
-</div>
-""", unsafe_allow_html=True)
-
-    with welcome_tab2:
-        st.markdown("**AI Claims Processing — Workflow Comparison**")
-        html_path = Path(__file__).parent / "ai_workflow_visuals.html"
-        if html_path.exists():
-            html_content = html_path.read_text(encoding="utf-8")
-            components.html(html_content, height=900, scrolling=True)
-        else:
-            st.warning(
-                "⚠️ `ai_workflow_visuals.html` not found. "
-                "Place the file in the same directory as `app.py`."
-            )
+st.markdown("<hr/>", unsafe_allow_html=True)
+st.caption(
+    "Tip: If you still see redacted Anthropic errors in Streamlit, enable SDK debug logs by setting "
+    "`ANTHROPIC_LOG=debug` in your deployment environment variables."
+)
