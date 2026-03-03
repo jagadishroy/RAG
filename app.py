@@ -459,7 +459,7 @@ with left:
 
     if show_workflow:
         st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
-        st.markdown("### 📈 Workflow Demo (Interactive)")
+        st.markdown("### 📈 Knowledge Retrieval Explanation - Jagadish, IIM Ranchi")
         render_workflow_demo(height=860)
         st.markdown("</div>", unsafe_allow_html=True)
 
