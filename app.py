@@ -127,12 +127,34 @@ WORKFLOW_HTML_PATH = BASE_DIR / "ai_workflow_visuals.html"
 # ─────────────────────────────────────────────
 # Workflow demo renderer
 # ─────────────────────────────────────────────
-def render_workflow_demo(height: int = 900) -> None:
+def render_workflow_demo():
     if not WORKFLOW_HTML_PATH.exists():
-        st.warning("Workflow demo HTML not found: ai_workflow_visuals.html")
+        st.warning("Workflow demo HTML not found.")
         return
-    html = WORKFLOW_HTML_PATH.read_text(encoding="utf-8")
-    components.html(html, height=height, scrolling=True)
+
+    html_content = WORKFLOW_HTML_PATH.read_text(encoding="utf-8")
+
+    auto_resize_wrapper = f"""
+    <div id="wrapper">
+        {html_content}
+    </div>
+
+    <script>
+    function sendHeight() {{
+        const height = document.body.scrollHeight;
+        window.parent.postMessage({{
+            type: "streamlit:setFrameHeight",
+            height: height
+        }}, "*");
+    }}
+
+    window.onload = sendHeight;
+    setTimeout(sendHeight, 500);
+    setTimeout(sendHeight, 1000);
+    </script>
+    """
+
+    components.html(auto_resize_wrapper, height=100, scrolling=False)
 
 
 # ─────────────────────────────────────────────
