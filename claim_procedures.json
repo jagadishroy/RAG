@@ -1,0 +1,161 @@
+{
+  "dataset": "claim_procedures_coverage_limits",
+  "description": "Claim filing procedures, coverage limits, prior authorization requirements, and appeals processes",
+  "version": "2024.1",
+  "records": [
+    {
+      "id": "CP-001",
+      "title": "Claim Filing Deadlines and Timely Filing Requirements",
+      "category": "claim_procedures",
+      "subcategory": "filing_deadlines",
+      "conditions": {
+        "in_network_filing_deadline_days": 90,
+        "out_of_network_filing_deadline_days": 180,
+        "coordination_of_benefits_deadline_days": 180,
+        "appeal_deadline_days": 180,
+        "urgent_claim_decision_hours": 72,
+        "standard_claim_decision_days": 30,
+        "concurrent_review_decision_hours": 24
+      },
+      "rule": "In-network providers are contractually required to submit claims within 90 days of the date of service. Out-of-network providers and members submitting reimbursement claims have 180 days from the date of service to submit. Claims submitted after the timely filing deadline will be denied unless the member can demonstrate extraordinary circumstances (natural disaster, documented provider error, or incapacitating illness). For urgent care claims requiring expedited review, the plan must provide a decision within 72 hours. Standard pre-service authorization requests must receive a decision within 3 business days. Post-service claim decisions must be rendered within 30 days. Concurrent (ongoing inpatient) review decisions must be made within 24 hours of the request. Failure by the plan to meet these deadlines entitles the member to escalate to external review. Overpayment recovery by the plan is limited to 18 months from the date of payment.",
+      "exclusions": ["claims for services not covered under the plan regardless of filing date", "fraudulent claims"],
+      "effective_date": "2024-01-01",
+      "tags": ["timely filing", "claim deadline", "prior authorization timeline", "urgent review", "overpayment recovery"]
+    },
+    {
+      "id": "CP-002",
+      "title": "Prior Authorization Requirements — Complete Schedule",
+      "category": "claim_procedures",
+      "subcategory": "prior_authorization",
+      "conditions": {
+        "always_require_PA": ["inpatient_admission_non_emergency", "outpatient_surgery", "MRI_CT_PET_scans", "chemotherapy", "radiation_therapy", "home_health_over_20_visits", "durable_medical_equipment_over_500", "specialty_injectable_biologics", "transplants", "bariatric_surgery", "sleep_studies"],
+        "never_require_PA": ["emergency_services", "preventive_care_ACA_mandated", "family_planning_counseling", "pediatric_immunizations", "annual_wellness_visit"],
+        "PA_valid_days": 90,
+        "retro_PA_allowed_hours": 48
+      },
+      "rule": "Prior Authorization (PA) is required for all inpatient admissions (non-emergency), all outpatient surgical procedures, advanced imaging (MRI, CT with contrast, PET scans), all systemic cancer treatments, radiation therapy (initial course), home health care exceeding 20 visits per year, durable medical equipment with purchase price over $500, all specialty injectable biologics and infusion therapies, transplants of any organ or tissue, bariatric surgery, and in-laboratory sleep studies. PA is never required for: emergency services, ACA-mandated preventive care, family planning counseling, pediatric immunizations, and annual wellness visits. An approved PA is valid for 90 days from the approval date. For urgent admissions outside business hours, a retroactive PA may be submitted within 48 hours of admission. PA approval does not guarantee payment; the service must still be medically necessary and covered under the plan at the time of service. PA can be denied for lack of medical necessity, experimental/investigational status, or availability of equally effective lower-cost alternative.",
+      "exclusions": ["PA approvals do not override benefit exclusions", "PA obtained under incorrect diagnosis codes may be voided"],
+      "effective_date": "2024-01-01",
+      "tags": ["prior authorization", "PA required", "inpatient", "outpatient surgery", "MRI", "biologics", "transplant", "bariatric", "home health"]
+    },
+    {
+      "id": "CP-003",
+      "title": "Annual and Lifetime Coverage Limits by Benefit Category",
+      "category": "claim_procedures",
+      "subcategory": "coverage_limits",
+      "conditions": {
+        "lifetime_limits_prohibited": "ACA_essential_health_benefits",
+        "annual_limits_prohibited": "ACA_essential_health_benefits",
+        "annual_limits_allowed": ["non_essential_health_benefits", "excepted_benefits"],
+        "specific_limits": {
+          "skilled_nursing_facility": {"days_per_year": 180, "requires_3day_hospital_stay_first": true},
+          "home_health_visits": {"per_year": 60, "PA_after_visit_20": true},
+          "outpatient_physical_therapy": {"visits_per_year": 60, "combined_with_OT": true},
+          "outpatient_occupational_therapy": {"visits_per_year": 60, "combined_with_PT": true},
+          "outpatient_speech_therapy": {"visits_per_year": 40},
+          "chiropractic": {"visits_per_year": 30, "medically_necessary_only": true},
+          "acupuncture": {"visits_per_year": 20, "covered_conditions": ["chronic_pain", "chemotherapy_nausea", "migraines"]},
+          "inpatient_psychiatric": {"days_per_year": 30, "parity_applies": true},
+          "residential_treatment": {"days_per_year": 60, "substance_use_included": true}
+        }
+      },
+      "rule": "The ACA prohibits annual and lifetime dollar limits on essential health benefits (EHBs) including hospitalization, emergency services, maternity care, mental health/SUD, prescription drugs, and preventive care. Non-EHB benefits may have visit or day limits. Skilled nursing facility (SNF) coverage is limited to 180 days per year and requires a qualifying 3-consecutive-day inpatient hospital stay prior to SNF admission. Home health is limited to 60 visits per year; PA is required after 20 visits. Physical and occupational therapy are combined at 60 visits per year. Speech therapy is limited to 40 visits per year. Chiropractic is limited to 30 medically necessary visits. Acupuncture is covered at 20 visits per year for documented chronic pain, chemotherapy-induced nausea, or chronic migraines. Inpatient psychiatric is subject to a 30-day per year limit but parity rules require this to be applied no more restrictively than medical/surgical inpatient limits. Residential treatment is 60 days per year.",
+      "exclusions": ["cosmetic services (no coverage)", "experimental treatments (no coverage)", "routine dental and vision (separate benefit)"],
+      "effective_date": "2024-01-01",
+      "tags": ["coverage limits", "skilled nursing", "home health", "physical therapy", "chiropractic", "acupuncture", "inpatient psych", "residential treatment", "ACA limits"]
+    },
+    {
+      "id": "CP-004",
+      "title": "Appeals Process — Internal and External Review Rights",
+      "category": "claim_procedures",
+      "subcategory": "appeals",
+      "conditions": {
+        "internal_appeal_deadline_days": 180,
+        "internal_appeal_decision_standard_days": 30,
+        "internal_appeal_decision_urgent_days": 72,
+        "external_review_eligibility": "after_internal_appeal_or_urgent_bypass",
+        "external_review_decision_days": 45,
+        "external_review_urgent_hours": 72,
+        "independent_review_organization": "accredited_IRO"
+      },
+      "rule": "Members have the right to appeal any adverse benefit determination (ABD) including claim denials, prior authorization denials, and rescissions of coverage. The internal appeal must be filed within 180 days of receiving the ABD notice. The plan must decide standard appeals within 30 days (pre-service) or 60 days (post-service). Urgent/concurrent appeals must be decided within 72 hours. The internal appeal must be reviewed by a different clinical reviewer than the original denial decision-maker. If the internal appeal is denied, the member may request external review by an accredited Independent Review Organization (IRO). External review decisions are binding on the plan. The plan bears the cost of external review. Emergency external review may be requested simultaneously with internal appeal for urgent medical situations. Members may expedite to external review without completing internal appeal if the plan fails to meet its decision deadlines. State external review laws may provide additional protections beyond federal minimum standards.",
+      "exclusions": ["appeals filed after the 180-day deadline without good cause", "appeals for services not covered under the plan as written"],
+      "effective_date": "2024-01-01",
+      "tags": ["appeals", "internal appeal", "external review", "IRO", "adverse benefit determination", "urgent appeal", "binding decision"]
+    },
+    {
+      "id": "CP-005",
+      "title": "Coordination of Benefits (COB) — Primary and Secondary Coverage",
+      "category": "claim_procedures",
+      "subcategory": "coordination_of_benefits",
+      "conditions": {
+        "COB_order_rules": {
+          "employee_own_plan": "always_primary",
+          "birthday_rule_for_dependents": "parent_birthday_earlier_in_year_is_primary",
+          "medicare_active_employee_20plus_employees": "group_plan_primary",
+          "medicare_active_employee_under_20_employees": "medicare_primary",
+          "COBRA_vs_active_coverage": "active_coverage_primary"
+        },
+        "total_benefit_maximum": "100_percent_of_allowable_charges",
+        "claim_submission_to_secondary": "within_180_days_of_primary_EOB"
+      },
+      "rule": "When a member has coverage under two plans, the Coordination of Benefits (COB) rules determine which plan pays first (primary) and which pays second (secondary). The member's own employer plan is always primary for their own care. For dependent children, the Birthday Rule applies: the plan of the parent whose birthday falls earlier in the calendar year is primary. In cases of divorce, the plan of the parent with legal custody is primary; the plan of the parent without custody is secondary; and the plan of a stepparent of the custodial parent pays third. For active employees aged 65+, if the employer has 20 or more employees, the group health plan is primary and Medicare is secondary. For employers with under 20 employees, Medicare is primary. COBRA coverage is always secondary to active employer-sponsored coverage. Total reimbursement across all plans cannot exceed 100% of allowable charges. Secondary claims must be submitted within 180 days of receiving the primary plan's Explanation of Benefits (EOB).",
+      "exclusions": ["Medicaid is always payer of last resort", "veteran benefits for service-related conditions coordinate differently"],
+      "effective_date": "2024-01-01",
+      "tags": ["coordination of benefits", "COB", "primary coverage", "secondary coverage", "birthday rule", "Medicare COB", "COBRA", "dependent coordination"]
+    },
+    {
+      "id": "CP-006",
+      "title": "Subrogation and Right of Recovery",
+      "category": "claim_procedures",
+      "subcategory": "subrogation",
+      "conditions": {
+        "subrogation_right": true,
+        "member_obligation": "cooperate_and_reimburse",
+        "made_whole_doctrine": "not_applicable_in_ERISA_plans",
+        "attorney_fee_allocation": "common_fund_doctrine_may_apply",
+        "reporting_threshold_days": 30
+      },
+      "rule": "The plan has a right of subrogation and reimbursement when a member receives payment for medical expenses from a third party (auto insurer, workers' compensation carrier, liability settlement, or judgment). Members are required to report third-party involvement within 30 days of filing a claim or receiving notice of a potential recovery. The plan is entitled to first-dollar recovery from any third-party payment, not subject to a 'made whole' requirement in ERISA self-funded plans. Members must sign a Subrogation and Reimbursement Agreement before the plan will advance benefits for claims involving third-party liability. The plan may reduce future benefits or seek direct recovery if the member settles a third-party claim without notifying and protecting the plan's interest. In cases involving attorney representation, the plan may agree to reduce its recovery by a pro-rata share of attorneys' fees under the common fund doctrine. Workers' compensation claims: if the employer's WC carrier denies a claim and the member seeks benefits from the health plan, the health plan may pay pending WC adjudication and seek reimbursement if WC is later found compensable.",
+      "exclusions": ["recovery from settlements designated exclusively for pain and suffering", "uninsured motorist claims in states with specific anti-subrogation statutes"],
+      "effective_date": "2024-01-01",
+      "tags": ["subrogation", "third-party recovery", "ERISA", "workers compensation", "right of recovery", "liability settlement", "reimbursement agreement"]
+    },
+    {
+      "id": "CP-007",
+      "title": "High-Cost Claim Case Management — Mandatory Thresholds",
+      "category": "claim_procedures",
+      "subcategory": "case_management",
+      "conditions": {
+        "mandatory_case_management_triggers": {
+          "single_claim_threshold": 50000,
+          "cumulative_annual_threshold": 100000,
+          "diagnosis_triggers": ["cancer", "organ_transplant", "traumatic_brain_injury", "spinal_cord_injury", "premature_birth", "ESRD"],
+          "readmission_trigger": "same_diagnosis_within_30_days"
+        },
+        "member_participation": "voluntary",
+        "case_manager_role": "advisory_not_gatekeeping"
+      },
+      "rule": "Claims exceeding $50,000 for a single occurrence or $100,000 cumulative annually trigger mandatory outreach by a registered nurse case manager. Diagnosis-based triggers regardless of cost include: any cancer diagnosis, organ transplant (evaluation or procedure), traumatic brain injury, spinal cord injury, premature birth (gestational age under 32 weeks), and end-stage renal disease. Hospital readmission within 30 days for the same or related diagnosis also triggers case management outreach. Member participation in case management is strictly voluntary; benefits may not be reduced for declining case management. The case manager's role is advisory: to facilitate care coordination, identify appropriate levels of care, assist with discharge planning, and help navigate the plan's benefits. Case managers do not have authority to deny benefits. A complex case may be referred to a specialty disease management program for chronic condition support.",
+      "exclusions": ["case management cannot mandate treatment decisions", "participation refusal does not affect benefit eligibility"],
+      "effective_date": "2024-01-01",
+      "tags": ["case management", "high-cost claims", "disease management", "cancer", "transplant", "TBI", "ESRD", "readmission", "care coordination"]
+    },
+    {
+      "id": "CP-008",
+      "title": "Experimental and Investigational Treatment Exclusion Policy",
+      "category": "claim_procedures",
+      "subcategory": "experimental_treatments",
+      "conditions": {
+        "definition_criteria": ["FDA_not_approved_for_indication", "phase_I_or_II_trials_only", "not_in_approved_compendia", "no_consensus_in_peer_reviewed_literature"],
+        "clinical_trial_exception": "routine_patient_costs_covered",
+        "independent_medical_review_available": true,
+        "life_threatening_condition_exception": true
+      },
+      "rule": "Services, drugs, and devices are considered experimental or investigational if they meet any of the following criteria: (1) not FDA-approved for the specific indication being treated; (2) only evaluated in Phase I or II clinical trials; (3) not included in standard medical compendia (NCCN, American Hospital Formulary Service, US Pharmacopeia); or (4) no consensus exists in peer-reviewed literature regarding safety and efficacy for the specific use. Experimental treatment denials are subject to mandatory independent medical review upon member request, at no cost to the member, with a decision required within 30 days (72 hours for urgent). Exception: for life-threatening conditions where no standard treatment alternative exists, the plan must cover the routine patient costs of participation in qualifying clinical trials (Phase II, III, or IV trials approved by NIH, FDA, or a qualified cancer research institution). The experimental exclusion cannot be applied based solely on the rarity of a condition. Retrospective denial of a claim as experimental after prior authorization was granted is prohibited.",
+      "exclusions": ["Phase I trials (routine costs not covered)", "treatments denied based on experimental status after PA granted — prospective PA denial only"],
+      "effective_date": "2024-01-01",
+      "tags": ["experimental", "investigational", "clinical trials", "FDA approval", "independent medical review", "life-threatening", "off-label", "compendia"]
+    }
+  ]
+}

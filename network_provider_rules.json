@@ -1,0 +1,144 @@
+{
+  "dataset": "network_provider_rules",
+  "description": "In-network and out-of-network coverage rules, balance billing protections, surprise billing, and provider tiering",
+  "version": "2024.1",
+  "records": [
+    {
+      "id": "NW-001",
+      "title": "In-Network vs Out-of-Network Cost-Sharing Structure",
+      "category": "network_rules",
+      "subcategory": "cost_sharing",
+      "conditions": {
+        "plan_type": "Premium Health PPO",
+        "in_network_deductible": {"individual": 1500, "family": 3000},
+        "out_of_network_deductible": {"individual": 4000, "family": 8000},
+        "in_network_oop_max": {"individual": 5000, "family": 10000},
+        "out_of_network_oop_max": {"individual": 12000, "family": 24000},
+        "in_network_coinsurance": 0.20,
+        "out_of_network_coinsurance": 0.40
+      },
+      "rule": "Premium Health PPO plan members may receive care from out-of-network providers, but are subject to significantly higher cost-sharing. In-network deductible is $1,500 individual / $3,000 family; out-of-network deductible is $4,000 individual / $8,000 family. After deductible, in-network coinsurance is 20% and out-of-network coinsurance is 40%. Out-of-network claims are reimbursed based on the plan's Maximum Allowable Amount (MAA), which is set at the 80th percentile of FAIR Health regional benchmarks. Members are responsible for any charges above the MAA (balance billing) when using out-of-network providers who are not subject to No Surprises Act protections. Out-of-pocket maximums are separate for in-network and out-of-network services.",
+      "exclusions": ["out-of-network emergency care (subject to NSA protections)", "out-of-network care when no in-network provider is reasonably available within 60 miles"],
+      "effective_date": "2024-01-01",
+      "tags": ["PPO", "out-of-network", "deductible", "coinsurance", "OOP maximum", "MAA", "balance billing"]
+    },
+    {
+      "id": "NW-002",
+      "title": "No Surprises Act (NSA) Protections — Emergency and Facility-Based Care",
+      "category": "network_rules",
+      "subcategory": "surprise_billing",
+      "conditions": {
+        "law": "No Surprises Act (effective January 1, 2022)",
+        "applies_to": ["emergency_services", "non-emergency_at_in_network_facility", "air_ambulance"],
+        "cost_sharing_basis": "in_network_cost_sharing_applies",
+        "QPA_benchmark": "median_contracted_rate_from_2019_adjusted"
+      },
+      "rule": "Under the No Surprises Act, members are protected from surprise medical bills in three scenarios: (1) Emergency services from any provider at any facility — regardless of network status, the member pays only their in-network cost-sharing amount. The plan pays the out-of-network provider based on the Qualifying Payment Amount (QPA), the median contracted rate for the service in the geographic area. (2) Non-emergency services from out-of-network providers at an in-network facility — protected unless the provider gives 72-hour advance notice and the member provides written consent to out-of-network cost-sharing. (3) Out-of-network air ambulance services — subject to the same in-network cost-sharing protections. Ground ambulance services are NOT currently covered by the NSA. Provider may pursue Independent Dispute Resolution (IDR) against the plan for payment disputes; the member is held harmless from payment disputes.",
+      "exclusions": ["ground ambulance services", "out-of-network services at out-of-network facilities when informed consent was given", "services from providers not licensed in the applicable state"],
+      "effective_date": "2022-01-01",
+      "tags": ["No Surprises Act", "NSA", "surprise billing", "emergency", "air ambulance", "QPA", "IDR", "in-network facility"]
+    },
+    {
+      "id": "NW-003",
+      "title": "Out-of-Network Emergency Coverage — Financial Responsibility",
+      "category": "network_rules",
+      "subcategory": "emergency_oon",
+      "conditions": {
+        "trigger": "emergency_medical_condition",
+        "definition": "prudent_layperson_standard",
+        "prior_authorization": "not_required_for_emergency",
+        "retroactive_denial_prohibition": true,
+        "stabilization_coverage": true
+      },
+      "rule": "Emergency services must be covered regardless of network status under the prudent layperson standard: a medical condition manifesting itself by acute symptoms of sufficient severity (including severe pain) such that a prudent layperson could reasonably expect the absence of immediate medical attention to result in placing health in serious jeopardy. Prior authorization cannot be required for emergency services. Plans may not retroactively deny emergency claims based on final diagnosis alone if the presenting symptoms warranted emergency evaluation. Post-stabilization care requires authorization but the plan cannot delay authorization unreasonably. If a member is admitted from the emergency department to an in-network hospital, the admission is covered at in-network rates even if the admitting physician is out-of-network (NSA protection applies). Emergency care outside the United States is covered at the out-of-network rate up to $250,000 lifetime maximum per occurrence.",
+      "exclusions": ["non-emergency use of emergency room (copay penalty of $250 applies)", "international emergency coverage above $250,000 lifetime limit"],
+      "effective_date": "2024-01-01",
+      "tags": ["emergency", "out-of-network", "prudent layperson", "prior authorization", "post-stabilization", "international coverage"]
+    },
+    {
+      "id": "NW-004",
+      "title": "Provider Network Tiering — Preferred vs Standard vs Specialty Network",
+      "category": "network_rules",
+      "subcategory": "tiered_network",
+      "conditions": {
+        "tiers": {
+          "Tier_1_Preferred": {"copay_PCP": 15, "copay_specialist": 30, "coinsurance": 0.10},
+          "Tier_2_Standard": {"copay_PCP": 30, "copay_specialist": 60, "coinsurance": 0.20},
+          "Tier_3_Out_of_Network": {"deductible_first": true, "coinsurance": 0.40},
+          "Tier_4_Specialty_Center_of_Excellence": {"copay": 0, "coinsurance": 0.05}
+        },
+        "tier_assignment_criteria": "quality_metrics_and_cost_efficiency"
+      },
+      "rule": "The Premium Health PPO uses a four-tier provider network structure. Tier 1 (Preferred Network) providers have met quality thresholds and cost-efficiency benchmarks; members pay $15 PCP copay and $30 specialist copay with 10% coinsurance after deductible. Tier 2 (Standard Network) providers are in-network but not preferred; members pay $30 PCP copay and $60 specialist copay with 20% coinsurance. Tier 3 is out-of-network with standard OON cost-sharing. Tier 4 (Centers of Excellence) includes designated specialty facilities for complex procedures (transplants, bariatric surgery, complex cardiac surgery, oncology); Tier 4 services at designated Centers of Excellence are subject to 5% coinsurance with no copay and no deductible. Tier designation can change annually; members are notified 60 days in advance of tier changes. Members may request a Tier 1 exception for continuity of care when a treating provider is downgraded, for up to 12 months.",
+      "exclusions": ["concierge or direct primary care practices not contracted with the plan", "telemedicine-only practices without affiliated network affiliation"],
+      "effective_date": "2024-01-01",
+      "tags": ["tiered network", "preferred provider", "center of excellence", "copay", "coinsurance", "tier 1", "tier 2"]
+    },
+    {
+      "id": "NW-005",
+      "title": "Continuity of Care — Mid-Year Network Changes",
+      "category": "network_rules",
+      "subcategory": "continuity_of_care",
+      "conditions": {
+        "qualifying_conditions_for_continuity": ["active_cancer_treatment", "pregnancy_past_24_weeks", "organ_transplant_scheduled_within_180_days", "terminal_illness", "complex_chronic_condition_with_treatment_plan"],
+        "continuity_period_maximum_days": 365,
+        "applies_to": "provider_leaving_network_involuntarily"
+      },
+      "rule": "When a provider leaves the plan's network involuntarily (not voluntarily terminating their contract), members with qualifying complex conditions are entitled to continuity of care at in-network cost-sharing for a transitional period. Qualifying conditions include: active cancer treatment (chemotherapy, radiation, immunotherapy), pregnancy beyond 24 weeks of gestation at time of provider's network termination, scheduled organ transplant within 180 days, terminal illness with life expectancy under 6 months, and complex chronic condition under an active treatment plan with quarterly specialist visits. The continuity period lasts up to 90 days or through the current course of treatment (whichever is shorter), up to a maximum of 365 days for terminal illness. Members must request continuity of care in writing within 30 days of receiving notice of the provider's network departure. The provider must agree to the plan's terms and rates during the continuity period.",
+      "exclusions": ["providers who voluntarily leave the network", "new conditions diagnosed after network departure notice", "continuity of care with providers whose licenses have been suspended"],
+      "effective_date": "2024-01-01",
+      "tags": ["continuity of care", "network change", "provider termination", "cancer treatment", "pregnancy", "chronic condition", "terminal illness"]
+    },
+    {
+      "id": "NW-006",
+      "title": "Out-of-Network Reimbursement — Usual, Customary, and Reasonable (UCR)",
+      "category": "network_rules",
+      "subcategory": "UCR_reimbursement",
+      "conditions": {
+        "reimbursement_basis": "FAIR_Health_80th_percentile",
+        "balance_billing_allowed": true,
+        "member_responsibility": "charges_above_MAA_plus_coinsurance",
+        "large_claim_threshold": 50000,
+        "large_claim_review": "mandatory_case_management"
+      },
+      "rule": "Out-of-network claims are reimbursed at the plan's Maximum Allowable Amount (MAA), set at the 80th percentile of FAIR Health benchmarks for the applicable geographic region and service code. The member is responsible for: (1) the OON deductible, (2) 40% coinsurance of the MAA, and (3) any provider charges above the MAA (balance billing exposure). For example: if a provider bills $75,000 for a surgical procedure and the MAA is $40,000, the plan pays $40,000 × 60% = $24,000. The member owes $40,000 × 40% = $16,000 in coinsurance plus up to $35,000 in balance billing, minus any OON deductible already met. Claims exceeding $50,000 trigger mandatory case management review; a case manager contacts the member to discuss in-network alternatives and potential Centers of Excellence. Members may appeal MAA determinations within 60 days.",
+      "exclusions": ["emergency services (NSA applies, balance billing prohibited)", "services where plan-directed in-network care was not reasonably available"],
+      "effective_date": "2024-01-01",
+      "tags": ["UCR", "usual customary reasonable", "MAA", "FAIR Health", "balance billing", "out-of-network reimbursement", "case management"]
+    },
+    {
+      "id": "NW-007",
+      "title": "Specialist Referral Requirements by Plan Type",
+      "category": "network_rules",
+      "subcategory": "referrals",
+      "conditions": {
+        "PPO_referral_required": false,
+        "HMO_referral_required": true,
+        "POS_referral_required": "for_OON_only",
+        "self_referral_specialties": ["OB/GYN", "mental_health", "ophthalmology_routine", "dermatology_routine"],
+        "standing_referral_conditions": ["cancer", "HIV/AIDS", "chronic_renal_failure", "diabetes_with_complications"]
+      },
+      "rule": "Premium Health PPO members do not require PCP referrals to see in-network specialists. HMO plan members must obtain a PCP referral for all specialist visits except: OB/GYN for routine and pregnancy care, mental health and substance use disorder providers, routine ophthalmology visits, and routine dermatology visits. Members with qualifying complex conditions (active cancer, HIV/AIDS, chronic renal failure, complicated diabetes) may request a standing referral to their treating specialist, valid for up to 12 months and renewable annually. Emergency specialist consultations do not require advance referral. For HMO members who self-refer to a specialist without a required referral, the claim may be denied or processed at the out-of-network rate. A PCP may issue a retroactive referral within 48 hours of an urgent specialist visit for emergent but non-emergency conditions.",
+      "exclusions": ["specialist visits without referral in HMO plans (non-emergency)", "referrals from non-participating PCPs in HMO network"],
+      "effective_date": "2024-01-01",
+      "tags": ["referral", "PCP", "specialist", "HMO", "PPO", "standing referral", "self-referral", "OB/GYN"]
+    },
+    {
+      "id": "NW-008",
+      "title": "Out-of-Area and Travel Coverage",
+      "category": "network_rules",
+      "subcategory": "travel_coverage",
+      "conditions": {
+        "emergency_OOA_coverage": "in_network_cost_sharing",
+        "urgent_care_OOA_coverage": "in_network_cost_sharing",
+        "routine_care_OOA_coverage": "out_of_network_rates",
+        "national_ppo_network": "Blue Card PPO",
+        "international_emergency_coverage": {"maximum_lifetime": 250000, "medically_necessary_evacuation": true}
+      },
+      "rule": "Members traveling or residing temporarily out of their home service area are covered for emergency and urgent care at in-network cost-sharing rates, regardless of whether the treating provider participates in the local PPO network, provided the plan is a national PPO plan utilizing the Blue Card PPO network. Routine care outside the home service area is covered at out-of-network rates. For temporary out-of-area residence exceeding 90 consecutive days, members may request a temporary service area extension, granting access to in-network providers in the temporary location for up to 12 months. International emergency coverage provides up to $250,000 lifetime per occurrence; medically necessary emergency evacuation to the nearest appropriate facility is covered without dollar limit. Prescription drugs obtained while traveling internationally are covered up to a 30-day supply at the out-of-network pharmacy rate.",
+      "exclusions": ["routine or elective care sought internationally", "care in countries under US travel advisories Level 4 (Do Not Travel)"],
+      "effective_date": "2024-01-01",
+      "tags": ["travel coverage", "out-of-area", "international", "Blue Card", "emergency evacuation", "temporary residence", "urgent care"]
+    }
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "dataset": "cardiac_surgical_coverage",
+  "description": "Detailed coverage rules for cardiac procedures, major surgeries, and complex surgical interventions",
+  "version": "2024.1",
+  "records": [
+    {
+      "id": "CS-001",
+      "title": "Coronary Artery Bypass Grafting (CABG) — Coverage and Authorization",
+      "category": "cardiac_surgical",
+      "subcategory": "CABG",
+      "conditions": {
+        "procedure_codes": ["33510-33516", "33517-33523"],
+        "prior_auth_required": true,
+        "second_opinion_recommended": true,
+        "center_of_excellence_option": true,
+        "coverage_tier": "Tier_4_COE_preferred",
+        "typical_cost_range": {"low": 50000, "high": 200000},
+        "inpatient_days_typical": {"min": 5, "max": 10}
+      },
+      "rule": "Coronary artery bypass grafting (CABG) is covered when medically necessary for significant coronary artery disease not amenable to percutaneous coronary intervention (PCI/stenting). Prior authorization is required. CABG is indicated for: left main coronary artery disease with ≥50% stenosis, triple vessel disease with reduced LV function (EF <50%), or failed PCI with ongoing ischemia. Emergency CABG (post-failed PCI or hemodynamic instability) does not require PA. When performed at a designated Tier 4 Center of Excellence, the member pays only 5% coinsurance with no deductible. When performed at a standard in-network hospital (Tier 2), standard deductible and 20% coinsurance apply. Out-of-network CABG is covered at OON rates; the plan will cover the UCR amount with the member responsible for the OON deductible, 40% coinsurance, and any balance billing. Cardiac rehabilitation (up to 36 sessions over 18 weeks) is covered and recommended post-CABG. A second surgical opinion is covered at 100% in-network.",
+      "exclusions": ["CABG as prophylactic procedure without documented significant stenosis", "repeat CABG within 5 years without documented graft failure or new disease progression"],
+      "effective_date": "2024-01-01",
+      "tags": ["CABG", "coronary bypass", "cardiac surgery", "prior authorization", "center of excellence", "cardiac rehab", "open heart surgery"]
+    },
+    {
+      "id": "CS-002",
+      "title": "Out-of-Network Cardiac Surgery — Financial Responsibility Calculation",
+      "category": "cardiac_surgical",
+      "subcategory": "OON_cardiac_financial",
+      "conditions": {
+        "OON_deductible_individual": 4000,
+        "OON_coinsurance": 0.40,
+        "MAA_benchmark": "FAIR_Health_80th_percentile",
+        "example_case": {
+          "billed_amount": 75000,
+          "MAA": 42000,
+          "prior_OON_deductible_met": 0,
+          "calculation": {
+            "plan_pays": "0.60 * (MAA - OON_deductible) = 0.60 * (42000 - 4000) = 22800",
+            "member_coinsurance": "0.40 * (42000 - 4000) = 15200",
+            "member_deductible": 4000,
+            "member_balance_billing": "75000 - 42000 = 33000",
+            "member_total_exposure": "4000 + 15200 + 33000 = 52200"
+          }
+        }
+      },
+      "rule": "When a member receives out-of-network cardiac surgery, financial responsibility is calculated as follows: The plan reimburses based on the Maximum Allowable Amount (MAA), set at the 80th percentile of FAIR Health benchmarks. Using a $75,000 cardiac surgery bill as an example: (1) The member first satisfies the $4,000 OON deductible. (2) The plan pays 60% of the MAA minus the deductible: if MAA = $42,000, plan pays 0.60 × ($42,000 – $4,000) = $22,800. (3) The member pays 40% coinsurance: 0.40 × $38,000 = $15,200. (4) The member is also responsible for balance billing — the provider's billed amount above the MAA: $75,000 – $42,000 = $33,000. (5) Total member financial exposure: $4,000 (deductible) + $15,200 (coinsurance) + $33,000 (balance bill) = $52,200. No Surprises Act protections do NOT apply here unless the surgery was performed at an in-network facility. Members are strongly encouraged to use in-network or Tier 4 Center of Excellence facilities to minimize financial exposure.",
+      "exclusions": ["balance billing protection applies if NSA emergency protections triggered", "case management may negotiate rates on member's behalf for planned OON procedures"],
+      "effective_date": "2024-01-01",
+      "tags": ["out-of-network", "cardiac surgery", "financial responsibility", "balance billing", "MAA", "FAIR Health", "OON deductible", "coinsurance calculation"]
+    },
+    {
+      "id": "CS-003",
+      "title": "Transcatheter Aortic Valve Replacement (TAVR) Coverage",
+      "category": "cardiac_surgical",
+      "subcategory": "valve_procedures",
+      "conditions": {
+        "procedure_codes": ["33361", "33362", "33363", "33364", "33365", "33366"],
+        "prior_auth_required": true,
+        "CMS_national_coverage": "NCD_20.32",
+        "eligibility_criteria": {
+          "heart_team_evaluation": true,
+          "STS_score_required": true,
+          "inoperable_or_high_risk": "documented_by_two_cardiac_surgeons"
+        },
+        "center_requirements": "must_perform_min_50_TAVRs_per_year"
+      },
+      "rule": "Transcatheter Aortic Valve Replacement (TAVR) is covered for severe symptomatic aortic stenosis in patients who are inoperable or at high surgical risk for traditional open-heart valve replacement. Coverage requires: (1) evaluation by a multidisciplinary heart team including at least one interventional cardiologist and one cardiac surgeon; (2) documentation by two cardiac surgeons that the patient is inoperable or at high surgical risk (STS PROM score ≥8% or meeting other high-risk criteria); (3) procedure performed at a hospital with a documented structural heart disease program performing a minimum of 50 TAVR procedures annually. For intermediate and low-risk patients, TAVR is covered with prior authorization if the heart team determines it is the preferred approach. The procedure must be performed at a facility meeting CMS National Coverage Determination 20.32 registry requirements. Valve-in-valve TAVR for failed bioprosthetic valves is covered under the same criteria. Post-TAVR monitoring and device management are covered per standard cardiac follow-up protocols.",
+      "exclusions": ["TAVR for non-severe (mild or moderate) aortic stenosis", "TAVR at facilities not meeting minimum volume requirements"],
+      "effective_date": "2024-01-01",
+      "tags": ["TAVR", "aortic valve", "structural heart", "transcatheter", "heart team", "STS score", "aortic stenosis", "prior authorization"]
+    },
+    {
+      "id": "CS-004",
+      "title": "Bariatric Surgery — Eligibility, Authorization, and Coverage Details",
+      "category": "cardiac_surgical",
+      "subcategory": "bariatric",
+      "conditions": {
+        "procedure_types": ["sleeve_gastrectomy", "Roux-en-Y_gastric_bypass", "adjustable_gastric_banding"],
+        "prior_auth_required": true,
+        "eligibility_criteria": {
+          "BMI_threshold_1": {"BMI_min": 40, "comorbidities_required": 0},
+          "BMI_threshold_2": {"BMI_min": 35, "comorbidities_required": 1, "qualifying_comorbidities": ["Type_2_diabetes", "severe_obstructive_sleep_apnea", "severe_hypertension", "GERD_refractory", "nonalcoholic_steatohepatitis"]},
+          "supervised_weight_loss_months": 6,
+          "psychological_evaluation": "required",
+          "nutritional_counseling": "required_preop"
+        },
+        "center_of_excellence": {"accreditation": "MBSAQIP", "preferred_tier": 4}
+      },
+      "rule": "Bariatric surgery (sleeve gastrectomy, gastric bypass, or adjustable gastric banding) is covered when the following criteria are met: (1) BMI ≥ 40 with no required comorbidities, or BMI 35–39.9 with at least one documented obesity-related comorbidity (Type 2 diabetes, severe obstructive sleep apnea with AHI >30, hypertension requiring ≥2 medications, GERD refractory to maximal medical therapy, or NASH with biopsy-confirmed fibrosis); (2) documented failure of a medically supervised weight management program for a minimum of 6 consecutive months within the past 2 years; (3) psychological evaluation by a licensed mental health professional clearing the patient for surgery; (4) pre-operative nutritional counseling; (5) procedure performed at an MBSAQIP-accredited Center of Excellence (Tier 4). Post-operative care including nutritional counseling, vitamin supplementation guidance, and behavioral support is covered for 24 months following surgery. Revision surgery for complications of prior bariatric surgery (pouch dilation, band erosion, anastomotic stricture) is covered with separate PA.",
+      "exclusions": ["bariatric surgery for BMI under 35", "revision surgery for weight regain without documented mechanical complication", "non-FDA-approved bariatric devices"],
+      "effective_date": "2024-01-01",
+      "tags": ["bariatric surgery", "sleeve gastrectomy", "gastric bypass", "BMI", "obesity", "prior authorization", "MBSAQIP", "center of excellence", "supervised weight loss"]
+    },
+    {
+      "id": "CS-005",
+      "title": "Organ Transplant Coverage — General Policy and Financial Structure",
+      "category": "cardiac_surgical",
+      "subcategory": "transplant",
+      "conditions": {
+        "covered_transplants": ["kidney", "liver", "heart", "lung", "pancreas", "kidney_pancreas", "intestinal", "bone_marrow_stem_cell", "corneal"],
+        "prior_auth_required": true,
+        "center_of_excellence_required": true,
+        "evaluation_coverage": true,
+        "donor_costs_covered": true,
+        "lifetime_transplant_benefit": {"standard": 1000000, "premium_plan": "unlimited"},
+        "immunosuppressant_coverage": "required_post_transplant_lifetime"
+      },
+      "rule": "Organ transplant evaluation, surgery, and follow-up care are covered as a Tier 4 Center of Excellence benefit. All major solid organ transplants (kidney, liver, heart, lung, pancreas, heart-lung, intestinal) and bone marrow/stem cell transplants require prior authorization and must be performed at a designated transplant center meeting UNOS accreditation standards and the plan's minimum volume requirements. Pre-transplant evaluation costs including workup, testing, and evaluation by the transplant team are covered. Living donor evaluation and surgery are covered up to the plan's donor benefit maximum ($50,000). Cadaveric organ procurement costs are covered as part of the transplant benefit. Post-transplant immunosuppressant medications (tacrolimus, cyclosporine, mycophenolate, sirolimus, prednisone) are covered for the lifetime of the transplanted organ under the prescription drug benefit with a $0 cost-sharing for generic formulations. Transplant benefit lifetime maximum is $1,000,000 on standard plans and unlimited on Premium Health PPO. Graft failure and retransplantation require a new PA and are covered subject to re-evaluation of medical necessity.",
+      "exclusions": ["experimental xenotransplantation", "transplants at non-UNOS-accredited centers", "transplants performed outside the US except under case-management approved protocols"],
+      "effective_date": "2024-01-01",
+      "tags": ["transplant", "organ transplant", "kidney", "heart", "liver", "bone marrow", "stem cell", "center of excellence", "immunosuppressant", "UNOS", "donor coverage"]
+    },
+    {
+      "id": "CS-006",
+      "title": "Implantable Cardioverter-Defibrillator (ICD) and Cardiac Device Coverage",
+      "category": "cardiac_surgical",
+      "subcategory": "cardiac_devices",
+      "conditions": {
+        "devices_covered": ["single_chamber_ICD", "dual_chamber_ICD", "biventricular_ICD_CRT-D", "subcutaneous_ICD", "wearable_defibrillator"],
+        "prior_auth_required": true,
+        "CMS_criteria_reference": "NCD_20.4",
+        "EP_study_required": "case_dependent",
+        "waiting_period_post_MI_days": 40,
+        "waiting_period_post_revascularization_days": 90
+      },
+      "rule": "Implantable cardioverter-defibrillators (ICDs) are covered for primary and secondary prevention of sudden cardiac death when the following criteria are met. Primary prevention: sustained ventricular tachycardia or ventricular fibrillation documented, or LVEF ≤35% with NYHA Class II–III heart failure on optimal medical therapy for ≥3 months, or documented familial/inherited channelopathy (long QT syndrome, Brugada syndrome, hypertrophic cardiomyopathy). Important waiting periods apply: ICD implantation must be delayed at least 40 days post-myocardial infarction and 90 days post-coronary revascularization (CABG or PCI) for primary prevention indications, as LVEF may recover during this period. Secondary prevention: survival of sudden cardiac arrest, spontaneous sustained VT, or unexplained syncope with inducible VT on electrophysiology (EP) study. Cardiac resynchronization therapy-defibrillator (CRT-D) is covered for LVEF ≤35% with LBBB or QRS >150ms and NYHA Class III–IV. Subcutaneous ICDs are covered as an alternative to transvenous ICD when the patient cannot receive venous leads. Wearable cardioverter-defibrillators (WCDs) are covered as a bridge device for up to 3 months post-MI or post-revascularization while awaiting reassessment of LVEF.",
+      "exclusions": ["ICD implantation within 40-day post-MI waiting period except secondary prevention indications", "ICD for LVEF >35% without documented VT/VF or familial channelopathy"],
+      "effective_date": "2024-01-01",
+      "tags": ["ICD", "defibrillator", "CRT-D", "cardiac device", "sudden cardiac death", "LVEF", "heart failure", "prior authorization", "40-day waiting period", "subcutaneous ICD"]
+    },
+    {
+      "id": "CS-007",
+      "title": "Complex Cardiac Surgery with Diabetes Comorbidity — Special Considerations",
+      "category": "cardiac_surgical",
+      "subcategory": "complex_cases_comorbidity",
+      "conditions": {
+        "scenario": "cardiac_surgery_with_diabetes",
+        "comorbidity_diabetes": {"type_1_or_2": true, "impacts_surgical_risk": true, "perioperative_glucose_protocol": "required"},
+        "CABG_vs_PCI_guidance": "SYNTAX_score_driven",
+        "insurance_implications": {
+          "PA_complexity": "high",
+          "LOS_extension": {"standard_CABG_days": 7, "diabetes_adjusted_days": 9},
+          "additional_coverages_triggered": ["endocrinology_consult", "wound_care_if_sternal_infection", "cardiac_rehab_extended"],
+          "out_of_network_financial_example": {
+            "billed": 95000,
+            "MAA": 58000,
+            "OON_deductible_remaining": 4000,
+            "plan_pays": 32400,
+            "member_coinsurance": 21600,
+            "member_balance_bill": 37000,
+            "member_total": 62600
+          }
+        }
+      },
+      "rule": "When a member requires complex cardiac surgery (CABG or valve surgery) with concurrent Type 1 or Type 2 diabetes, several additional coverage and clinical considerations apply. The presence of diabetes increases surgical risk (higher STS score), may extend expected length of stay (standard CABG 7 days; diabetes-adjusted estimate 9 days for extended hospital authorization), and triggers additional covered services including: pre-operative endocrinology consultation for glucose optimization, perioperative insulin protocol management, extended wound care coverage if sternal wound complications occur (up to 180 days of wound care services including negative pressure wound therapy), and extended cardiac rehabilitation (up to 52 sessions over 26 weeks vs. standard 36 sessions). For a 45-year-old diabetic patient requiring $95,000 out-of-network cardiac surgery with MAA of $58,000: plan pays $32,400 (60% of $54,000 after $4,000 OON deductible); member owes $21,600 coinsurance + $37,000 balance billing = $58,600 total. Members with diabetes undergoing cardiac surgery at a Tier 4 COE significantly reduce financial exposure (5% coinsurance, no deductible, no balance billing). Post-operative diabetic management, including ongoing insulin and glucose monitoring, continues under standard chronic condition benefits.",
+      "exclusions": ["extended LOS beyond medical necessity criteria regardless of comorbidities", "experimental perioperative glucose management devices not FDA-approved"],
+      "effective_date": "2024-01-01",
+      "tags": ["diabetes", "cardiac surgery", "CABG", "comorbidity", "complex case", "out-of-network calculation", "extended LOS", "wound care", "cardiac rehab", "perioperative management"]
+    },
+    {
+      "id": "CS-008",
+      "title": "Percutaneous Coronary Intervention (PCI) and Stenting",
+      "category": "cardiac_surgical",
+      "subcategory": "PCI",
+      "conditions": {
+        "procedure_codes": ["92920-92944"],
+        "prior_auth_required": "non_emergency_only",
+        "emergency_PCI_no_PA": true,
+        "drug_eluting_stent_covered": true,
+        "IVUS_OCT_covered": true,
+        "FFR_iFR_covered": true,
+        "radial_vs_femoral_access": "both_covered"
+      },
+      "rule": "Percutaneous coronary intervention (PCI) including balloon angioplasty and coronary stenting (bare-metal or drug-eluting) is covered for obstructive coronary artery disease. Emergency PCI (primary PCI for STEMI or hemodynamically unstable NSTEMI) requires no prior authorization and is processed as an emergency. Elective PCI requires prior authorization with documentation of: positive stress test or imaging study demonstrating ischemia, or fractional flow reserve (FFR) ≤0.80, or instantaneous wave-free ratio (iFR) ≤0.89 for lesions of intermediate severity. Drug-eluting stents (DES) are covered as the standard of care; bare-metal stents are covered but DES is preferred per current guidelines. Physiologic lesion assessment (FFR, iFR) and intracoronary imaging (IVUS, OCT) are covered as adjunctive tools during PCI. Atherectomy (rotational, orbital, laser) is covered for calcified lesions not suitable for standard PCI. Staged PCI (treating multiple vessels at separate sessions within 60 days) is covered; all staged procedures in a planned multi-vessel PCI program must be authorized under the initial PA. Left ventriculography performed as part of cardiac catheterization concurrent with PCI is covered. PCI following failed thrombolytic therapy (rescue PCI) is covered as emergency without PA.",
+      "exclusions": ["PCI for intermediate lesions without documented ischemia or abnormal FFR/iFR", "PCI for vessels with reference diameter <2.0mm (medical management preferred)"],
+      "effective_date": "2024-01-01",
+      "tags": ["PCI", "stenting", "coronary intervention", "drug-eluting stent", "STEMI", "FFR", "iFR", "IVUS", "cardiac catheterization", "emergency PCI", "atherectomy"]
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "dataset": "eligibility_rules",
+  "description": "Insurance eligibility rules based on age, plan type, employment status, and medical conditions",
+  "version": "2024.1",
+  "records": [
+    {
+      "id": "ER-001",
+      "title": "Premium Health Plan Eligibility — Age and Employment",
+      "category": "eligibility",
+      "subcategory": "age_employment",
+      "conditions": {
+        "age_range": {"min": 18, "max": 64},
+        "employment_status": ["full_time", "part_time_over_20hrs"],
+        "waiting_period_days": 90,
+        "plan_type": "Premium Health PPO"
+      },
+      "rule": "Employees aged 18–64 working full-time or part-time (minimum 20 hours/week) are eligible for Premium Health PPO coverage after a 90-day waiting period from date of hire. Employees must maintain continuous employment throughout the waiting period. Termination and rehire resets the waiting period unless rehire occurs within 13 weeks of termination.",
+      "exclusions": ["temporary contractors", "seasonal employees under 6-month assignment", "employees on unpaid leave during waiting period"],
+      "effective_date": "2024-01-01",
+      "tags": ["age", "employment", "waiting period", "PPO", "eligibility"]
+    },
+    {
+      "id": "ER-002",
+      "title": "Dependent Eligibility — Spouse and Children",
+      "category": "eligibility",
+      "subcategory": "dependents",
+      "conditions": {
+        "dependent_types": ["legal_spouse", "domestic_partner", "children_under_26"],
+        "documentation_required": ["marriage_certificate", "birth_certificate", "domestic_partner_affidavit"],
+        "enrollment_window_days": 30
+      },
+      "rule": "Legal spouses, qualified domestic partners, and dependent children up to age 26 are eligible for coverage. Children aged 26+ may continue coverage only if they are permanently disabled and the disability began before age 26. Domestic partners must have cohabited for a minimum of 12 months and submit a signed affidavit. Enrollment must occur within 30 days of qualifying life event or during annual open enrollment.",
+      "exclusions": ["ex-spouses post-divorce unless COBRA elected", "stepchildren not living in household", "grandchildren unless legal guardianship established"],
+      "effective_date": "2024-01-01",
+      "tags": ["dependents", "spouse", "children", "domestic partner", "life event"]
+    },
+    {
+      "id": "ER-003",
+      "title": "Senior Supplemental Plan Eligibility — Age 65+",
+      "category": "eligibility",
+      "subcategory": "senior_plans",
+      "conditions": {
+        "age_range": {"min": 65, "max": 999},
+        "medicare_coordination": true,
+        "plan_type": "Senior Supplemental PPO",
+        "medicare_parts_required": ["Part A", "Part B"]
+      },
+      "rule": "Employees and retirees aged 65 or older become eligible for the Senior Supplemental PPO, which coordinates benefits with Medicare Parts A and B. The group health plan becomes secondary payer for active employees age 65+ with fewer than 20 employees; for employers with 20+ employees, the group plan remains primary. Retirees with Medicare become eligible for the Senior Supplemental plan as secondary coverage. Premium contribution rates change at age 65 transition.",
+      "exclusions": ["individuals not enrolled in Medicare Part B", "ESRD patients in first 30 months of Medicare eligibility"],
+      "effective_date": "2024-01-01",
+      "tags": ["senior", "age 65", "Medicare", "coordination of benefits", "retiree"]
+    },
+    {
+      "id": "ER-004",
+      "title": "Plan Eligibility After Reduction in Hours",
+      "category": "eligibility",
+      "subcategory": "hours_reduction",
+      "conditions": {
+        "trigger": "reduction_below_20hrs_per_week",
+        "grace_period_days": 30,
+        "cobra_trigger": true
+      },
+      "rule": "If an enrolled employee's work hours are reduced below 20 hours per week, they lose eligibility for employer-sponsored coverage effective the last day of the month following the reduction. A 30-day grace period applies during which premiums must still be paid. The employee is entitled to COBRA continuation coverage. Voluntary hour reduction and involuntary reduction are treated equally. Employees must be notified in writing within 14 days of the qualifying event.",
+      "exclusions": ["temporary reductions approved in advance under FMLA", "reductions due to approved medical leave with documented return date"],
+      "effective_date": "2024-01-01",
+      "tags": ["hours reduction", "eligibility loss", "COBRA", "part-time", "qualifying event"]
+    },
+    {
+      "id": "ER-005",
+      "title": "Eligibility for High Deductible Health Plan (HDHP) + HSA",
+      "category": "eligibility",
+      "subcategory": "HDHP_HSA",
+      "conditions": {
+        "plan_type": "HDHP Bronze",
+        "hsa_eligible": true,
+        "disqualifying_coverage": ["Medicare", "general_purpose_FSA", "spouse_non_HDHP_coverage"],
+        "minimum_deductible_2024": {"individual": 1600, "family": 3200}
+      },
+      "rule": "To be eligible for an HSA-paired High Deductible Health Plan, the enrollee must not have any disqualifying coverage including: Medicare Part A or B, enrollment in a general-purpose FSA (own or spouse's), VA benefits received within the past 3 months (unless for a service-connected disability), or coverage under a spouse's non-HDHP plan that covers the employee. The HDHP must have a minimum deductible of $1,600 (individual) or $3,200 (family) in 2024. Mid-year changes to HDHP status require prorated HSA contribution limits.",
+      "exclusions": ["individuals with Medicare coverage", "individuals with non-HDHP spousal coverage that applies to them"],
+      "effective_date": "2024-01-01",
+      "tags": ["HDHP", "HSA", "high deductible", "tax-advantaged", "disqualifying coverage"]
+    },
+    {
+      "id": "ER-006",
+      "title": "Eligibility Reinstatement After Leave of Absence",
+      "category": "eligibility",
+      "subcategory": "reinstatement",
+      "conditions": {
+        "leave_types": ["FMLA", "personal_leave", "military_leave", "disability_leave"],
+        "fmla_reinstatement": "automatic",
+        "personal_leave_max_days": 180,
+        "military_leave": "USERRA_governed"
+      },
+      "rule": "Employees returning from FMLA leave are entitled to automatic reinstatement of benefits effective the date of return, with no new waiting period. Employees returning from approved personal leave of up to 180 days must re-enroll within 30 days of return; coverage resumes on the first of the following month. Employees on military leave are governed by USERRA: upon return within 5 years, they are reinstated without new waiting periods. Disability leave participants may continue coverage through the employer's LTD coordination policy for up to 24 months. Any lapse in premium payment during leave that exceeds 30 days may require evidence of insurability for reinstatement.",
+      "exclusions": ["employees who voluntarily resign during leave", "employees whose leave exceeds policy maximums without approval"],
+      "effective_date": "2024-01-01",
+      "tags": ["FMLA", "leave of absence", "reinstatement", "USERRA", "military leave", "disability leave"]
+    },
+    {
+      "id": "ER-007",
+      "title": "Eligibility for Mental Health and Substance Use Disorder Benefits",
+      "category": "eligibility",
+      "subcategory": "behavioral_health",
+      "conditions": {
+        "parity_law": "Mental Health Parity and Addiction Equity Act (MHPAEA)",
+        "covered_plans": ["Premium Health PPO", "HDHP Bronze", "Senior Supplemental PPO"],
+        "requires_prior_auth_inpatient": true,
+        "requires_prior_auth_residential": true
+      },
+      "rule": "All covered plans must provide mental health and substance use disorder (MH/SUD) benefits that are no more restrictive than medical/surgical benefits under the Mental Health Parity and Addiction Equity Act. Inpatient psychiatric and residential treatment require prior authorization. Outpatient therapy (individual, group, family) is covered at the same cost-sharing as primary care visits. Intensive outpatient programs (IOP) covering 9+ hours/week are treated as intermediate care. Crisis intervention services do not require prior authorization. Annual and lifetime dollar limits on MH/SUD benefits are prohibited.",
+      "exclusions": ["experimental behavioral therapies not FDA-cleared", "court-ordered treatment not medically necessary per clinical review"],
+      "effective_date": "2024-01-01",
+      "tags": ["mental health", "substance use", "parity", "behavioral health", "prior authorization", "MHPAEA"]
+    },
+    {
+      "id": "ER-008",
+      "title": "Special Enrollment Rights — Loss of Other Coverage",
+      "category": "eligibility",
+      "subcategory": "special_enrollment",
+      "conditions": {
+        "trigger_events": ["loss_of_medicaid", "loss_of_CHIP", "loss_of_spousal_coverage", "new_dependent_birth_adoption"],
+        "enrollment_window_days": 60,
+        "medicaid_CHIP_window_days": 60
+      },
+      "rule": "Employees who lose other qualifying health coverage are entitled to special enrollment in the employer's plan within 60 days of the loss of coverage event. Qualifying triggers include: involuntary loss of Medicaid or CHIP, loss of coverage due to divorce or death of covered spouse, termination of employer coverage from another employer, and birth, adoption, or placement for adoption of a new dependent. New dependents added via birth or adoption are effective from the date of birth/adoption regardless of when paperwork is submitted, provided enrollment is completed within 60 days. Documentation of loss of prior coverage must be submitted within the enrollment window.",
+      "exclusions": ["voluntary termination of prior coverage", "loss of coverage due to non-payment of premiums by the employee"],
+      "effective_date": "2024-01-01",
+      "tags": ["special enrollment", "loss of coverage", "life event", "Medicaid", "CHIP", "newborn"]
+    }
+  ]
+}

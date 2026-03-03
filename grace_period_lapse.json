@@ -1,0 +1,142 @@
+{
+  "dataset": "grace_period_lapse_policies",
+  "description": "Premium payment grace periods, coverage lapse rules, reinstatement conditions, and COBRA timelines",
+  "version": "2024.1",
+  "records": [
+    {
+      "id": "GP-001",
+      "title": "Premium Payment Grace Period — Employer-Sponsored Plans",
+      "category": "grace_period",
+      "subcategory": "employer_sponsored",
+      "conditions": {
+        "grace_period_days": 30,
+        "coverage_status_during_grace": "active_pending_resolution",
+        "claims_processing_during_grace": "may_be_pended",
+        "notification_requirement_days": 15,
+        "retroactive_termination_allowed": true
+      },
+      "rule": "For employer-sponsored health plans, a 30-day grace period applies after a missed premium payment. During the grace period, coverage remains technically active but the plan may pend (hold) claims without processing until the premium is received. If the premium is paid within the 30-day grace period, pended claims are released and processed as if no interruption occurred. If payment is not received by end of the grace period, coverage is terminated retroactively to the last day of the paid coverage period. The employer must provide written notice of delinquency within 15 days of the missed payment. Members receiving APTC (Advance Premium Tax Credits) through a marketplace plan have a 3-month grace period, but claims after the first 30 days may be pended and denied if premiums are not paid by end of the grace period. Reinstatement within the same plan year requires evidence of good faith and payment of all overdue premiums.",
+      "exclusions": ["grace period does not apply to voluntary plan termination", "second missed payment within 12 months may not receive full 30-day grace period at employer's discretion"],
+      "effective_date": "2024-01-01",
+      "tags": ["grace period", "premium payment", "missed payment", "coverage lapse", "retroactive termination", "APTC", "pended claims"]
+    },
+    {
+      "id": "GP-002",
+      "title": "COBRA Election and Premium Payment Timelines",
+      "category": "grace_period",
+      "subcategory": "COBRA",
+      "conditions": {
+        "qualifying_events": ["termination_non_gross_misconduct", "hours_reduction", "divorce_legal_separation", "dependent_aging_off", "death_of_covered_employee", "Medicare_entitlement", "bankruptcy_of_employer"],
+        "election_period_days": 60,
+        "initial_premium_deadline_days": 45,
+        "ongoing_premium_grace_period_days": 30,
+        "COBRA_duration_months": {"standard": 18, "disability_extension": 29, "second_qualifying_event": 36}
+      },
+      "rule": "COBRA qualifying events trigger a required election notice within 14 days (employer has 30 days to notify the plan administrator; plan has 14 days to send notice). The qualified beneficiary has 60 days from the later of coverage loss or election notice to elect COBRA. After election, the first premium (covering the retroactive period from coverage loss) is due within 45 days. Subsequent monthly premiums have a 30-day grace period. If the initial premium is not paid within 45 days, COBRA election is void. Ongoing premium non-payment after the 30-day grace period terminates COBRA coverage. COBRA coverage lasts 18 months for employment-based qualifying events. Disability extension to 29 months is available if the SSA determines the individual was disabled at the time of the qualifying event and within the first 60 days of COBRA. A second qualifying event (e.g., divorce occurring while on COBRA for job loss) may extend coverage to 36 months for dependents. COBRA premiums may not exceed 102% of the group rate (150% during disability extension months 19–29).",
+      "exclusions": ["gross misconduct termination does not trigger COBRA for the terminated employee (dependents still eligible)", "employers with fewer than 20 employees are not subject to federal COBRA (state mini-COBRA may apply)"],
+      "effective_date": "2024-01-01",
+      "tags": ["COBRA", "qualifying event", "election period", "premium payment", "disability extension", "second qualifying event", "18 months", "29 months", "36 months"]
+    },
+    {
+      "id": "GP-003",
+      "title": "Coverage Reinstatement After Lapse — Conditions and Requirements",
+      "category": "grace_period",
+      "subcategory": "reinstatement",
+      "conditions": {
+        "lapse_under_63_days": {"reinstatement_type": "automatic_if_eligible", "waiting_period_waived": true, "creditable_coverage_maintained": true},
+        "lapse_63_to_180_days": {"reinstatement_type": "requires_application", "evidence_of_insurability": "may_be_required", "waiting_period": "new_waiting_period_applies"},
+        "lapse_over_180_days": {"reinstatement_type": "new_enrollment_required", "treated_as_new_member": true, "open_enrollment_only": "unless_qualifying_event"}
+      },
+      "rule": "Coverage reinstatement rules depend on the length of the lapse. Lapses under 63 days: automatic reinstatement is available during the next open enrollment or qualifying life event; no new waiting period applies; creditable coverage is maintained for purposes of pre-existing condition exclusion offset. Lapses of 63–180 days: reinstatement requires a formal application; evidence of insurability may be required for certain supplemental benefits; a new waiting period applies for those benefits. Lapses exceeding 180 days: the individual must enroll as a new member during open enrollment or upon a qualifying life event; a full new waiting period applies for applicable benefits; prior creditable coverage history is reset. For lapses caused by employer administrative error, reinstatement is retroactive to the lapse date with no gap in coverage. Members should obtain a Certificate of Creditable Coverage upon termination to document prior coverage periods.",
+      "exclusions": ["reinstatement not available during active misconduct investigation", "reinstatement denied if coverage was terminated for fraud"],
+      "effective_date": "2024-01-01",
+      "tags": ["reinstatement", "lapse", "63-day gap", "creditable coverage", "waiting period", "evidence of insurability", "administrative error"]
+    },
+    {
+      "id": "GP-004",
+      "title": "Open Enrollment Period Rules and Late Enrollment Consequences",
+      "category": "grace_period",
+      "subcategory": "open_enrollment",
+      "conditions": {
+        "annual_open_enrollment_window_days": 30,
+        "employer_sponsored_OE_period": "october_1_to_october_31_annually",
+        "late_enrollment_consequence": "must_wait_for_next_OE_unless_qualifying_event",
+        "plan_change_effective_date": "january_1_following_OE",
+        "waiver_of_coverage_consequence": "locked_out_until_next_OE_or_qualifying_event"
+      },
+      "rule": "The annual Open Enrollment (OE) period for employer-sponsored plans runs October 1–31 each year, with coverage changes effective January 1 of the following plan year. Employees who fail to enroll or make changes during OE are locked into their current plan (or no coverage if newly eligible) until the next OE period, unless they experience a qualifying life event. Qualifying life events that allow mid-year enrollment changes include: marriage or divorce, birth or adoption, loss of other coverage, change in employment status, change in dependent eligibility, and relocation resulting in loss of network access. Employees who waive coverage during OE by explicitly declining enrollment must wait until the next OE or qualifying event to enroll. An employee who misses OE entirely and is on no plan is not enrolled for the coming year; they cannot enroll mid-year without a qualifying event. Employers must provide OE materials at least 30 days before the start of OE.",
+      "exclusions": ["missing OE without a qualifying event results in no coverage for the plan year", "plan selections made during OE are generally irrevocable mid-year absent a qualifying event"],
+      "effective_date": "2024-01-01",
+      "tags": ["open enrollment", "late enrollment", "qualifying event", "waiver of coverage", "plan year", "OE period", "locked out"]
+    },
+    {
+      "id": "GP-005",
+      "title": "Premium Grace Period — Individual Marketplace (ACA Exchange) Plans",
+      "category": "grace_period",
+      "subcategory": "marketplace_plans",
+      "conditions": {
+        "APTC_recipients_grace_period_months": 3,
+        "non_APTC_grace_period_days": 30,
+        "first_30_days_APTC": {"claims_processing": "normal", "coverage_active": true},
+        "days_31_to_90_APTC": {"claims_processing": "pended", "coverage_active": "technically_yes_but_pended"},
+        "post_90_days_unpaid": {"coverage_terminated": "retroactive_to_day_31"}
+      },
+      "rule": "ACA marketplace plan enrollees receiving Advance Premium Tax Credits (APTC) have a 3-month grace period for non-payment of premiums. During the first 30 days: coverage is fully active and claims are processed normally. During days 31–90: coverage is technically active but the insurer must pend all claims and notify providers that the enrollee is in the grace period. If the premium is paid by end of the 3-month grace period, all pended claims are processed retroactively. If payment is not received by end of 3 months: coverage is terminated retroactively to the last day of the first month of non-payment (day 30), meaning claims from days 31–90 are denied. Providers who treated the patient during days 31–90 may bill the patient directly for the full amount. Non-APTC marketplace enrollees have only a 30-day grace period with the same retroactive termination consequence. The insurer must report unpaid premium periods to the exchange so the enrollee loses APTC eligibility for future enrollment until the debt is settled.",
+      "exclusions": ["grace period rules do not apply to short-term health plans", "Medicaid has different grace period rules governed by state programs"],
+      "effective_date": "2024-01-01",
+      "tags": ["marketplace", "ACA exchange", "APTC", "grace period", "3-month grace", "pended claims", "retroactive termination", "provider billing"]
+    },
+    {
+      "id": "GP-006",
+      "title": "Coverage Termination — Employer Notification and Run-Out Rules",
+      "category": "grace_period",
+      "subcategory": "termination_runout",
+      "conditions": {
+        "termination_effective_date_options": ["end_of_month_of_termination", "date_of_termination", "30_days_post_termination"],
+        "standard_employer_policy": "end_of_month",
+        "run_out_period_days": 90,
+        "FSA_run_out_days": 90,
+        "claims_incurred_cutoff": "last_day_of_coverage",
+        "notification_to_member_days": 14
+      },
+      "rule": "When employment terminates, health coverage typically ends on the last day of the month in which termination occurs (most common employer policy) or on the date of termination (less common). Members must be notified of coverage termination within 14 days. A run-out period of 90 days is provided after coverage termination during which members may submit claims for services that were incurred while coverage was active. Claims incurred on or before the last day of active coverage are eligible for reimbursement if submitted within the 90-day run-out period. FSAs also have a 90-day run-out period for incurred expenses. Prescription drug claims for medications dispensed after the coverage termination date are not eligible, even if the prescription was written before termination. HIPAA requires the plan to issue a Certificate of Creditable Coverage within 24 hours of a written request or automatically within a reasonable time after termination.",
+      "exclusions": ["services incurred after the last day of coverage are not reimbursable regardless of run-out period", "FSA forfeitures under use-it-or-lose-it rule are not recoverable after run-out period"],
+      "effective_date": "2024-01-01",
+      "tags": ["termination", "run-out period", "last day of coverage", "FSA", "certificate of coverage", "HIPAA", "claims cutoff"]
+    },
+    {
+      "id": "GP-007",
+      "title": "Plan Year Deductible and Accumulator Carryover Rules",
+      "category": "grace_period",
+      "subcategory": "deductible_carryover",
+      "conditions": {
+        "plan_year": "January_1_to_December_31",
+        "deductible_reset": "January_1",
+        "carryover_provision": {"Q4_expenses_carryover": true, "Q4_months": ["October", "November", "December"], "carryover_applies_to_next_year_deductible": true},
+        "mid_year_enrollment_deductible": "prorated_not_applied",
+        "OOP_max_reset": "January_1"
+      },
+      "rule": "Deductibles and out-of-pocket maximums reset on January 1 of each plan year. The plan offers a Q4 Carryover provision: expenses incurred in October, November, and December that apply toward the current year's deductible will also be applied toward the next plan year's deductible. This prevents members from facing a full deductible reset at year-end if they have met significant deductible accumulation late in the year. Members enrolling mid-year receive the full plan-year deductible without proration; they are not disadvantaged by enrolling after January 1. If a member switches from one plan option to another during open enrollment, accumulated deductible credits from the prior plan do not transfer to the new plan option — the deductible restarts under the new plan. Embedded deductible structure: in a family plan, each individual is subject to the individual deductible, and the family deductible is met when the combined family accumulation reaches the family threshold.",
+      "exclusions": ["carryover provision does not apply to OOP maximum accumulation", "deductible credits from a different employer's plan do not transfer"],
+      "effective_date": "2024-01-01",
+      "tags": ["deductible", "plan year reset", "carryover", "Q4 carryover", "OOP maximum", "mid-year enrollment", "embedded deductible", "family deductible"]
+    },
+    {
+      "id": "GP-008",
+      "title": "Retroactive Coverage Cancellation and Fraud Protections",
+      "category": "grace_period",
+      "subcategory": "retroactive_cancellation",
+      "conditions": {
+        "permissible_retro_cancellation_reasons": ["fraud", "material_misrepresentation", "failure_to_pay_premiums_after_grace_period"],
+        "ACA_prohibition": "retro_cancellation_for_health_reasons_prohibited",
+        "notice_required_days": 30,
+        "retro_cancellation_lookback_max_years": 3,
+        "rescission_definition": "cancellation_or_discontinuance_with_retroactive_effect"
+      },
+      "rule": "Under the ACA, retroactive cancellation (rescission) of health insurance coverage is prohibited except in two cases: (1) fraud or intentional misrepresentation of material fact on the application, or (2) failure to pay required premiums after expiration of the applicable grace period. Rescission for health status, utilization of benefits, or diagnosis is absolutely prohibited. When a plan rescinds coverage for fraud or non-payment, it must provide at least 30 days advance written notice before the rescission takes effect. Rescission investigations for fraud may look back up to 3 years from the application date. If rescission is granted, claims paid during the retroactively cancelled period may be recovered. Members have the right to appeal a rescission determination through the internal appeal and external review process, including expedited review. Retroactive correction of administrative errors (such as adding/removing dependents correctly) is not considered a rescission. If an employer fails to enroll an employee who was eligible, retroactive enrollment must be granted.",
+      "exclusions": ["rescission does not apply to prospective termination of coverage", "retroactive coverage addition for administrative errors is not subject to rescission rules"],
+      "effective_date": "2024-01-01",
+      "tags": ["rescission", "retroactive cancellation", "fraud", "material misrepresentation", "ACA prohibition", "30-day notice", "appeal rights", "premium non-payment"]
+    }
+  ]
+}

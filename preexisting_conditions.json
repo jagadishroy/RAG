@@ -1,0 +1,140 @@
+{
+  "dataset": "preexisting_condition_exclusions",
+  "description": "Rules governing pre-existing conditions, exclusion periods, ACA protections, and lookback windows",
+  "version": "2024.1",
+  "records": [
+    {
+      "id": "PX-001",
+      "title": "ACA Pre-existing Condition Protections — General Rule",
+      "category": "preexisting_conditions",
+      "subcategory": "ACA_protections",
+      "conditions": {
+        "law": "Affordable Care Act (ACA) Section 2704",
+        "applies_to": ["individual_market", "small_group", "large_group"],
+        "exclusion_period_allowed": false,
+        "grandfathered_plans": "may_have_exclusions"
+      },
+      "rule": "Under the Affordable Care Act, health insurers are prohibited from imposing pre-existing condition exclusion periods for all non-grandfathered plans in the individual and group markets. Insurers cannot deny coverage, charge higher premiums, or exclude benefits based on a pre-existing health condition including chronic illnesses, prior injuries, pregnancy, or mental health diagnoses. Grandfathered plans (those in existence before March 23, 2010 that have not made significant changes) may retain pre-existing condition exclusions for adults, but may not apply them to enrollees under age 19. All new plans issued after January 1, 2014 must comply fully regardless of market segment.",
+      "exclusions": ["grandfathered large group plans for adult enrollees", "short-term limited duration insurance (STLDI) plans"],
+      "effective_date": "2014-01-01",
+      "tags": ["ACA", "pre-existing condition", "exclusion period", "non-discrimination", "grandfathered plan"]
+    },
+    {
+      "id": "PX-002",
+      "title": "Diabetes — Coverage Rules and Carve-outs",
+      "category": "preexisting_conditions",
+      "subcategory": "chronic_conditions",
+      "conditions": {
+        "condition": "Diabetes Mellitus (Type 1 and Type 2)",
+        "icd10_codes": ["E10", "E11", "E13"],
+        "exclusion_period": "prohibited_under_ACA",
+        "required_coverage": ["insulin", "glucose_monitoring", "diabetes_education", "preventive_screening"],
+        "prior_auth_required": ["insulin_pumps", "CGM_devices", "bariatric_surgery_for_T2D"]
+      },
+      "rule": "Diabetes (Type 1 and Type 2) is a protected condition under the ACA and cannot be used as grounds for denial, exclusion, or premium surcharge in any ACA-compliant plan. Coverage must include: insulin and all FDA-approved diabetes medications, blood glucose monitoring supplies, hemoglobin A1c testing (minimum twice yearly), diabetes self-management education (DSME) programs, and annual dilated eye exams. Continuous glucose monitors (CGMs) require prior authorization and must meet medical necessity criteria including documented hypoglycemia unawareness or recurrent severe hypoglycemic events. Insulin pumps are covered for Type 1 diabetics with documented failure of multiple daily injections. Coverage for bariatric surgery as treatment for Type 2 diabetes requires BMI ≥35 with documented 6-month supervised weight loss program failure.",
+      "exclusions": ["experimental closed-loop artificial pancreas systems not FDA-approved", "weight loss programs not directly tied to diabetes management protocol"],
+      "effective_date": "2024-01-01",
+      "tags": ["diabetes", "Type 1", "Type 2", "insulin", "CGM", "chronic condition", "prior authorization"]
+    },
+    {
+      "id": "PX-003",
+      "title": "Cardiac Conditions — Pre-existing Coverage and Exclusions",
+      "category": "preexisting_conditions",
+      "subcategory": "cardiovascular",
+      "conditions": {
+        "conditions_covered": ["coronary_artery_disease", "heart_failure", "arrhythmia", "hypertension", "prior_MI"],
+        "icd10_codes": ["I10", "I20-I25", "I48", "I50", "Z87.39"],
+        "exclusion_period": "prohibited_under_ACA",
+        "waiting_period_cardiac_surgery": "none_for_ACA_plans",
+        "prior_auth_required": ["CABG", "valve_replacement", "ICD_implantation", "cardiac_catheterization"]
+      },
+      "rule": "Cardiac conditions including prior myocardial infarction, coronary artery disease, congestive heart failure, atrial fibrillation, and hypertension cannot be excluded or subject to exclusion periods under ACA-compliant plans. All medically necessary cardiac procedures are covered subject to the plan's standard cost-sharing. Coronary artery bypass grafting (CABG), valve replacement/repair, implantable cardioverter-defibrillator (ICD) placement, and cardiac catheterization require prior authorization. Emergency cardiac procedures (STEMI, life-threatening arrhythmia) do not require prior authorization and are processed as emergencies. Cardiac rehabilitation programs (up to 36 sessions over 18 weeks) are covered following: acute MI, coronary stent placement, CABG, heart valve repair/replacement, or heart transplant. A second opinion is strongly encouraged but not required for elective cardiac surgery.",
+      "exclusions": ["experimental gene therapy for cardiac conditions", "non-FDA-approved cardiac devices", "elective cosmetic cardiac procedures (extremely rare)"],
+      "effective_date": "2024-01-01",
+      "tags": ["cardiac", "heart disease", "CABG", "prior MI", "arrhythmia", "hypertension", "cardiac rehab", "prior authorization"]
+    },
+    {
+      "id": "PX-004",
+      "title": "Cancer — Lookback Periods and Coverage Continuity",
+      "category": "preexisting_conditions",
+      "subcategory": "oncology",
+      "conditions": {
+        "condition": "Cancer (all types)",
+        "exclusion_period": "prohibited_under_ACA",
+        "creditable_coverage_lookback": "not_applicable_post_ACA",
+        "clinical_trials_coverage": true,
+        "prior_auth_required": ["chemotherapy", "radiation", "immunotherapy", "stem_cell_transplant"]
+      },
+      "rule": "Cancer in any form — including prior cancer history, active treatment, or remission — cannot be used as a basis for exclusion, premium increase, or coverage limitation under ACA-compliant plans. Oncology coverage must include: chemotherapy (IV and oral), radiation therapy, immunotherapy, targeted therapy, and hormonal therapy as prescribed by a board-certified oncologist. Clinical trial coverage is mandated: routine patient costs for qualified clinical trials must be covered if the trial is approved by NIH, FDA, or a federally funded research institution. Prior authorization is required for all systemic cancer treatments, stem cell/bone marrow transplants, and proton beam therapy. Second opinion consultations for cancer diagnoses are covered at the in-network specialist rate. Genetic testing (BRCA1/BRCA2, Lynch syndrome panel) is covered for members meeting National Comprehensive Cancer Network (NCCN) high-risk criteria.",
+      "exclusions": ["experimental treatments not approved in any phase trial", "off-label drug use not supported by compendia (NCCN, Micromedex)"],
+      "effective_date": "2024-01-01",
+      "tags": ["cancer", "oncology", "chemotherapy", "clinical trials", "genetic testing", "BRCA", "prior authorization"]
+    },
+    {
+      "id": "PX-005",
+      "title": "Mental Health Diagnoses — Historical Exclusion Prohibition",
+      "category": "preexisting_conditions",
+      "subcategory": "behavioral_health",
+      "conditions": {
+        "conditions_covered": ["depression", "anxiety", "bipolar_disorder", "PTSD", "schizophrenia", "OCD", "eating_disorders"],
+        "exclusion_period": "prohibited_under_ACA",
+        "parity_requirement": "MHPAEA",
+        "prior_auth_required": ["inpatient_psychiatric", "residential_treatment", "ECT", "TMS"]
+      },
+      "rule": "Mental health diagnoses including depression, generalized anxiety disorder, bipolar disorder, PTSD, schizophrenia, OCD, and eating disorders are protected conditions under the ACA and MHPAEA. These conditions cannot trigger exclusion periods or benefit limitations that are more restrictive than those applied to comparable medical/surgical conditions. Treatment-resistant depression requiring electroconvulsive therapy (ECT) or transcranial magnetic stimulation (TMS) requires prior authorization and documentation of failure of at least two antidepressant medication trials. Eating disorder treatment including medical stabilization, residential treatment, and intensive outpatient programs must be covered at parity with inpatient medical admissions. Prior authorization is required for all inpatient psychiatric admissions and residential treatment programs; emergency involuntary holds (72-hour) do not require prior auth.",
+      "exclusions": ["experimental neurostimulation therapies without FDA approval", "court-ordered treatment without concurrent medical necessity determination"],
+      "effective_date": "2024-01-01",
+      "tags": ["mental health", "depression", "anxiety", "PTSD", "bipolar", "eating disorder", "ECT", "TMS", "parity"]
+    },
+    {
+      "id": "PX-006",
+      "title": "Pregnancy — Pre-existing Condition Status and Maternity Coverage",
+      "category": "preexisting_conditions",
+      "subcategory": "maternity",
+      "conditions": {
+        "condition": "Pregnancy and Maternity",
+        "exclusion_period": "prohibited_under_ACA",
+        "essential_health_benefit": true,
+        "prior_auth_required": ["elective_cesarean", "high_risk_obstetrics_specialist"],
+        "newborn_coverage_days": 30
+      },
+      "rule": "Pregnancy cannot be treated as a pre-existing condition under any ACA-compliant plan. Maternity and newborn care is one of the 10 essential health benefits and must be covered in all individual and small group plans. Coverage includes: all prenatal visits, lab work, and ultrasounds per ACOG guidelines; labor and delivery (vaginal and cesarean); minimum 48-hour hospital stay post-vaginal delivery and 96-hour stay post-cesarean; and postpartum care up to 12 months following delivery per the 2022 ACA amendment. Newborns are automatically covered for the first 30 days of life; formal enrollment must be completed within 30 days to continue coverage. High-risk obstetric care with a maternal-fetal medicine specialist requires a referral but not prior authorization. Elective (non-medically indicated) cesarean sections require prior authorization.",
+      "exclusions": ["elective termination in states with coverage restrictions", "fertility treatments (covered under separate infertility benefit)"],
+      "effective_date": "2024-01-01",
+      "tags": ["pregnancy", "maternity", "newborn", "prenatal", "postpartum", "essential health benefit", "cesarean"]
+    },
+    {
+      "id": "PX-007",
+      "title": "Obesity and Related Comorbidities — Coverage Requirements",
+      "category": "preexisting_conditions",
+      "subcategory": "metabolic_conditions",
+      "conditions": {
+        "condition": "Obesity (BMI ≥ 30)",
+        "icd10_codes": ["E66", "E66.01", "E66.09"],
+        "exclusion_period": "prohibited_under_ACA",
+        "preventive_services_covered": ["intensive_behavioral_counseling", "screening"],
+        "bariatric_surgery_criteria": {"BMI_min": 40, "or_BMI_min_comorbidity": 35, "comorbidities_required": ["T2D", "severe_sleep_apnea", "severe_hypertension"]}
+      },
+      "rule": "Obesity (BMI ≥ 30) and its comorbidities cannot be used as grounds for exclusion under ACA-compliant plans. Preventive services must include intensive behavioral counseling for obesity (minimum 26 sessions in first year) at no cost-sharing for in-network providers. Anti-obesity medications (AOMs) approved by the FDA, including GLP-1 receptor agonists prescribed for weight management, require prior authorization; coverage varies by plan tier. Bariatric surgery (sleeve gastrectomy, gastric bypass, adjustable gastric banding) is covered when: BMI ≥ 40, or BMI ≥ 35 with at least one documented obesity-related comorbidity (Type 2 diabetes, severe obstructive sleep apnea, or severe hypertension). A minimum 6-month documented medically supervised weight loss program is required prior to surgical authorization. Post-surgical nutrition and behavioral counseling is covered for 24 months post-procedure.",
+      "exclusions": ["cosmetic body contouring procedures following weight loss", "non-FDA-approved weight loss devices or supplements"],
+      "effective_date": "2024-01-01",
+      "tags": ["obesity", "BMI", "bariatric surgery", "GLP-1", "weight management", "comorbidity", "behavioral counseling"]
+    },
+    {
+      "id": "PX-008",
+      "title": "Creditable Coverage and Prior Insurance Lookback",
+      "category": "preexisting_conditions",
+      "subcategory": "creditable_coverage",
+      "conditions": {
+        "applicable_plans": ["grandfathered_pre_ACA_employer_plans"],
+        "lookback_period_months": 6,
+        "credit_period_maximum": "full_offset_if_no_gap",
+        "gap_threshold_days": 63
+      },
+      "rule": "For any grandfathered employer plan that still applies pre-existing condition exclusion periods (applicable only to pre-ACA plans not subject to full ACA compliance), creditable coverage from prior insurance must be counted to reduce or eliminate the exclusion period. The standard pre-existing condition lookback period is 6 months prior to enrollment date. If the individual had creditable prior coverage with no gap exceeding 63 days, the exclusion period is fully offset. For each month of prior creditable coverage without a 63-day gap, one month is credited against the exclusion period. Creditable coverage includes: prior employer-sponsored plans, individual market plans, Medicare, Medicaid, CHIP, COBRA, military coverage (TRICARE), and Indian Health Service coverage. A Certificate of Creditable Coverage (CCC) must be provided by the prior carrier within 24 hours of a written request.",
+      "exclusions": ["coverage gaps exceeding 63 days reset creditable coverage accumulation", "short-term limited duration plans do not count as creditable coverage"],
+      "effective_date": "2024-01-01",
+      "tags": ["creditable coverage", "lookback period", "exclusion offset", "COBRA", "certificate of coverage", "gap in coverage"]
+    }
+  ]
+}
