@@ -1,13 +1,17 @@
 import streamlit as st
 import streamlit.components.v1 as components
+
 import json
 import os
-import math
 import time
 import re
+import math
 from pathlib import Path
+from typing import Any, Dict, List, Tuple
+
 import anthropic
 from anthropic import Anthropic
+
 
 # ─────────────────────────────────────────────
 # Page config
@@ -20,67 +24,60 @@ st.set_page_config(
 )
 
 # ─────────────────────────────────────────────
-# Custom CSS
+# Styling (keeps the “better before” card layout feel)
 # ─────────────────────────────────────────────
-st.markdown("""
+st.markdown(
+    """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
 html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
-
 .stApp { background-color: #f7f6f2; }
 
 .header-banner {
     background: linear-gradient(135deg, #1a3c5e 0%, #0d5c3a 100%);
-    padding: 28px 32px; border-radius: 12px; margin-bottom: 24px; color: white;
+    padding: 28px 32px; border-radius: 14px; margin-bottom: 18px; color: white;
 }
-.header-banner h1 { font-size: 28px; margin: 0; letter-spacing: .3px; }
-.header-banner p  { margin: 6px 0 0; opacity: .9; }
+.header-banner h1 { font-size: 28px; margin: 0; letter-spacing: .2px; }
+.header-banner p  { margin: 6px 0 0; opacity: .92; }
 
 .card {
-    background: white; border-radius: 12px; padding: 18px 18px 14px;
+    background: white; border-radius: 14px; padding: 18px 18px 14px;
     border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 1px 10px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 12px rgba(0,0,0,0.045);
 }
 .card h3 { margin: 0 0 10px; font-size: 16px; color: #14324a; }
 .mono { font-family: 'DM Mono', monospace; font-size: 12px; }
 
 .badge {
-    display:inline-block; padding: 2px 8px; border-radius: 999px;
-    background: rgba(13,92,58,0.10); color: #0d5c3a; font-size: 12px;
+    display:inline-block; padding: 2px 10px; border-radius: 999px;
+    background: rgba(13,92,58,0.12); color: #0d5c3a; font-size: 12px;
     border: 1px solid rgba(13,92,58,0.20);
     margin-left: 8px;
 }
-.pill {
-    display:inline-block; padding: 6px 10px; border-radius: 999px;
-    background: rgba(26,60,94,0.08); color: #1a3c5e; font-size: 12px;
-    border: 1px solid rgba(26,60,94,0.15);
-    margin-right: 6px; margin-bottom: 6px;
-}
-
 .small-note { color: rgba(0,0,0,0.55); font-size: 12px; }
 hr { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 18px 0; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-# ─────────────────────────────────────────────
-# Header
-# ─────────────────────────────────────────────
-st.markdown("""
+st.markdown(
+    """
 <div class="header-banner">
   <h1>InsureIQ <span class="badge">RAG Claims Assistant</span></h1>
   <p>Ask questions about policy documents. Answers cite the retrieved sources.</p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ─────────────────────────────────────────────
-# Sidebar — settings & API key
+# Sidebar — API + options
 # ─────────────────────────────────────────────
 st.sidebar.title("⚙️ Settings")
 
 QUERY_LIMIT = 10
-if "query_count" not in st.session_state:
-    st.session_state.query_count = 0
+st.session_state.setdefault("query_count", 0)
 
 st.sidebar.markdown("**Session query limit:**")
 st.sidebar.progress(min(st.session_state.query_count / QUERY_LIMIT, 1.0))
@@ -89,7 +86,6 @@ st.sidebar.caption(f"{st.session_state.query_count}/{QUERY_LIMIT} queries used")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🔑 Anthropic API Key")
 
-# Prefer Streamlit Secrets → env var → manual input
 api_key = None
 if hasattr(st, "secrets") and "ANTHROPIC_API_KEY" in st.secrets:
     api_key = st.secrets["ANTHROPIC_API_KEY"]
@@ -104,104 +100,251 @@ manual_key = st.sidebar.text_input(
 if manual_key.strip():
     api_key = manual_key.strip()
 
-# Model choice: default to a current stable Sonnet alias; override via env if desired.
-MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-MAX_CONTEXT_CHARS = int(os.getenv("MAX_CONTEXT_CHARS", "24000"))  # rough safety cap
-
 st.sidebar.markdown("### 🧠 Model")
+MODEL = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 st.sidebar.code(MODEL)
 
-st.sidebar.markdown("### 🧾 Retrieval settings")
-TOP_K = st.sidebar.slider("Top-k chunks", min_value=3, max_value=15, value=8, step=1)
-MIN_SCORE = st.sidebar.slider("Min score threshold", min_value=0.0, max_value=1.0, value=0.0, step=0.05)
+st.sidebar.markdown("### 🔎 Retrieval")
+TOP_K = st.sidebar.slider("Top-k sources", 3, 15, 8, 1)
+MIN_SCORE = st.sidebar.slider(
+    "Min relevance (BM25 score)", 0.0, 15.0, 0.0, 0.5,
+    help="Keep at 0.0 for demo reliability; raise if you want stricter evidence."
+)
+
+st.sidebar.markdown("### 📈 Demo Visual")
+show_workflow = st.sidebar.toggle("Show Workflow Demo (Interactive)", value=False)
+
+# Optional debug helpers
+show_pipeline = st.sidebar.toggle("Show pipeline log", value=True)
+show_doc_preview = st.sidebar.toggle("Show source previews", value=True)
 
 # ─────────────────────────────────────────────
-# Data / corpus loading (simple local JSON store)
+# File paths
 # ─────────────────────────────────────────────
-# ─────────────────────────────────────────────
-# Load ALL JSON policy files dynamically
-# ─────────────────────────────────────────────
-
 BASE_DIR = Path(__file__).parent
-
-def load_all_policy_files():
-    corpus = []
-    json_files = list(BASE_DIR.glob("*.json"))
-
-    for file_path in json_files:
-        try:
-            data = json.loads(file_path.read_text(encoding="utf-8"))
-
-            # If file already contains chunks list
-            if isinstance(data, list):
-                for i, item in enumerate(data):
-                    corpus.append({
-                        "id": f"{file_path.stem}_{i}",
-                        "title": file_path.stem.replace("_", " ").title(),
-                        "text": json.dumps(item) if isinstance(item, dict) else str(item),
-                        "source": file_path.name
-                    })
-
-            # If file is a single dictionary
-            elif isinstance(data, dict):
-                corpus.append({
-                    "id": file_path.stem,
-                    "title": file_path.stem.replace("_", " ").title(),
-                    "text": json.dumps(data, indent=2),
-                    "source": file_path.name
-                })
-
-        except Exception as e:
-            st.warning(f"Could not load {file_path.name}: {e}")
-
-    return corpus
-
-
-corpus = load_all_policy_files()
+WORKFLOW_HTML_PATH = BASE_DIR / "ai_workflow_visuals.html"
 
 # ─────────────────────────────────────────────
-# Minimal retrieval utilities (simple token overlap score)
+# Workflow demo renderer
+# ─────────────────────────────────────────────
+def render_workflow_demo(height: int = 900) -> None:
+    if not WORKFLOW_HTML_PATH.exists():
+        st.warning("Workflow demo HTML not found: ai_workflow_visuals.html")
+        return
+    html = WORKFLOW_HTML_PATH.read_text(encoding="utf-8")
+    components.html(html, height=height, scrolling=True)
+
+
+# ─────────────────────────────────────────────
+# Tokenization + BM25 retrieval (much stronger than token overlap)
 # ─────────────────────────────────────────────
 STOPWORDS = set("""
 a an the and or but if then else this that those these to from in on at for of with without
 is are was were be been being as by it its they them their you your i we our he she his her
 """.split())
 
-def tokenize(text: str) -> list[str]:
+def tokenize(text: str) -> List[str]:
     tokens = re.findall(r"[a-zA-Z0-9]+", (text or "").lower())
     return [t for t in tokens if t and t not in STOPWORDS]
 
-def score_overlap(query_tokens: list[str], doc_tokens: list[str]) -> float:
-    if not query_tokens or not doc_tokens:
-        return 0.0
-    q = set(query_tokens)
-    d = set(doc_tokens)
-    return len(q.intersection(d)) / max(1, len(q))
+def bm25_build(docs: List[Dict[str, Any]], k1: float = 1.5, b: float = 0.75):
+    """
+    Returns a lightweight BM25 index:
+      - doc_tokens: list[list[str]]
+      - doc_freq: term -> df
+      - idf: term -> idf
+      - doc_tf: list[dict[str,int]]
+      - doc_len: list[int]
+      - avgdl: float
+    """
+    doc_tokens: List[List[str]] = []
+    doc_tf: List[Dict[str, int]] = []
+    doc_len: List[int] = []
+    df: Dict[str, int] = {}
 
-def retrieve(query: str, docs: list[dict], top_k: int = 8) -> list[dict]:
-    qt = tokenize(query)
-    scored = []
-    for i, d in enumerate(docs):
-        text = d.get("text", "") or ""
-        dt = tokenize(text)
-        s = score_overlap(qt, dt)
-        scored.append((s, i, d))
+    for d in docs:
+        toks = tokenize(d.get("text", ""))
+        doc_tokens.append(toks)
+        doc_len.append(len(toks))
+        tf: Dict[str, int] = {}
+        seen = set()
+        for t in toks:
+            tf[t] = tf.get(t, 0) + 1
+            if t not in seen:
+                df[t] = df.get(t, 0) + 1
+                seen.add(t)
+        doc_tf.append(tf)
+
+    N = max(1, len(docs))
+    avgdl = (sum(doc_len) / N) if N else 0.0
+
+    idf: Dict[str, float] = {}
+    for term, dfi in df.items():
+        # classic BM25 idf with +0.5 smoothing
+        idf[term] = math.log(1 + (N - dfi + 0.5) / (dfi + 0.5))
+
+    return {
+        "k1": k1,
+        "b": b,
+        "doc_tf": doc_tf,
+        "doc_len": doc_len,
+        "avgdl": avgdl,
+        "idf": idf,
+    }
+
+def bm25_score(query: str, idx, doc_i: int) -> float:
+    q_terms = tokenize(query)
+    if not q_terms:
+        return 0.0
+
+    k1 = idx["k1"]
+    b = idx["b"]
+    tf = idx["doc_tf"][doc_i]
+    dl = idx["doc_len"][doc_i]
+    avgdl = idx["avgdl"] or 1.0
+    idf = idx["idf"]
+
+    score = 0.0
+    for term in q_terms:
+        if term not in tf:
+            continue
+        f = tf[term]
+        w = idf.get(term, 0.0)
+        denom = f + k1 * (1 - b + b * (dl / avgdl))
+        score += w * (f * (k1 + 1)) / (denom if denom else 1.0)
+    return float(score)
+
+def retrieve_bm25(query: str, docs: List[Dict[str, Any]], idx, top_k: int) -> List[Dict[str, Any]]:
+    scored: List[Tuple[float, int]] = []
+    for i in range(len(docs)):
+        s = bm25_score(query, idx, i)
+        scored.append((s, i))
     scored.sort(key=lambda x: x[0], reverse=True)
     out = []
-    for s, i, d in scored[:top_k]:
+    for s, i in scored[:top_k]:
+        d = docs[i]
         out.append({
             "id": d.get("id", i),
-            "title": d.get("title", f"Document {i+1}"),
+            "title": d.get("title", f"Doc {i+1}"),
             "text": d.get("text", ""),
             "score": float(s),
-            "source": d.get("source", d.get("title", f"Document {i+1}")),
+            "source": d.get("source", d.get("title", f"Doc {i+1}")),
         })
     return out
 
+
 # ─────────────────────────────────────────────
-# Prompt context builder
+# JSON → chunking (so your quick questions actually match something)
 # ─────────────────────────────────────────────
-def build_context(retrieved: list[dict]) -> str:
+def flatten_json(obj: Any, prefix: str = "") -> List[Tuple[str, str]]:
+    """
+    Flattens nested dict/list into (path, text) pairs.
+    Keeps paths to preserve meaning and improve retrieval.
+    """
+    items: List[Tuple[str, str]] = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            new_prefix = f"{prefix}.{k}" if prefix else str(k)
+            items.extend(flatten_json(v, new_prefix))
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            new_prefix = f"{prefix}[{i}]"
+            items.extend(flatten_json(v, new_prefix))
+    else:
+        # primitive
+        txt = "" if obj is None else str(obj)
+        items.append((prefix, txt))
+    return items
+
+def chunk_pairs(pairs: List[Tuple[str, str]], max_chars: int = 1800) -> List[str]:
+    """
+    Builds readable chunks like:
+      path: value
+    with a size cap for RAG prompt safety.
+    """
+    chunks: List[str] = []
+    buf: List[str] = []
+    cur = 0
+    for path, val in pairs:
+        line = f"{path}: {val}".strip()
+        if not line or line.endswith(":"):
+            continue
+        # avoid extremely long values collapsing the UI
+        if len(line) > 1000:
+            line = line[:1000] + "…"
+        add_len = len(line) + 1
+        if buf and (cur + add_len) > max_chars:
+            chunks.append("\n".join(buf))
+            buf = []
+            cur = 0
+        buf.append(line)
+        cur += add_len
+    if buf:
+        chunks.append("\n".join(buf))
+    return chunks
+
+@st.cache_data(show_spinner=False)
+def load_policy_corpus() -> List[Dict[str, Any]]:
+    """
+    Loads all *.json files in the same folder as app.py
+    and converts each into multiple chunks for retrieval.
+    """
+    corpus: List[Dict[str, Any]] = []
+    json_files = sorted([p for p in BASE_DIR.glob("*.json") if p.is_file()])
+
+    for fp in json_files:
+        try:
+            raw = json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            # If JSON parsing fails, skip quietly (keeps the app resilient)
+            continue
+
+        title = fp.stem.replace("_", " ").title()
+
+        # If file is already an array of “chunk-like” objects
+        if isinstance(raw, list) and raw and isinstance(raw[0], dict) and ("text" in raw[0] or "content" in raw[0]):
+            for i, item in enumerate(raw):
+                txt = item.get("text") or item.get("content") or json.dumps(item, ensure_ascii=False)
+                corpus.append({
+                    "id": f"{fp.stem}_{i}",
+                    "title": title,
+                    "text": str(txt),
+                    "source": fp.name
+                })
+            continue
+
+        # Otherwise flatten and chunk
+        pairs = flatten_json(raw)
+        chunks = chunk_pairs(pairs, max_chars=1800)
+
+        # If flattening produced too little (rare), fallback to whole dump
+        if not chunks:
+            chunks = [json.dumps(raw, indent=2, ensure_ascii=False)]
+
+        for i, ch in enumerate(chunks):
+            corpus.append({
+                "id": f"{fp.stem}_{i}",
+                "title": title,
+                "text": ch,
+                "source": fp.name
+            })
+
+    return corpus
+
+@st.cache_data(show_spinner=False)
+def build_retrieval_index(corpus: List[Dict[str, Any]]):
+    return bm25_build(corpus)
+
+corpus = load_policy_corpus()
+bm25_idx = build_retrieval_index(corpus) if corpus else None
+
+
+# ─────────────────────────────────────────────
+# Prompt context builder (tight & safe)
+# ─────────────────────────────────────────────
+MAX_CONTEXT_CHARS = int(os.getenv("MAX_CONTEXT_CHARS", "24000"))
+
+def build_context(retrieved: List[Dict[str, Any]]) -> str:
     parts = []
     for idx, r in enumerate(retrieved, start=1):
         title = r.get("title", f"Source {idx}")
@@ -213,49 +356,48 @@ def build_context(retrieved: list[dict]) -> str:
             f"{text}\n"
         )
     joined = "\n---\n".join(parts)
-    # Rough guardrail: keep prompt sizes manageable (tokenization varies by model)
     if len(joined) > MAX_CONTEXT_CHARS:
         joined = joined[:MAX_CONTEXT_CHARS] + "\n\n[TRUNCATED: context shortened for model input safety]"
     return joined
 
-def generate_answer(query: str, retrieved: list[dict], client: Anthropic) -> str:
+
+# ─────────────────────────────────────────────
+# LLM call with robust error surfacing (no more “mystery redactions”)
+# ─────────────────────────────────────────────
+SYSTEM_PROMPT = """You are InsureIQ, an expert insurance claims specialist assistant.
+
+You MUST answer using ONLY the provided policy documents.
+If the documents do not contain the answer, say so clearly and ask what document or detail is missing.
+
+Requirements:
+1) Directly answer the member’s question.
+2) Cite evidence using [SOURCE N] markers.
+3) If relevant, explain deductible/coinsurance/copay impacts.
+4) Call out exclusions, pre-auth, in-network vs out-of-network conditions when applicable.
+5) If you do any calculation, show the math.
+6) Keep the tone precise, practical, and non-speculative.
+"""
+
+def generate_answer(query: str, retrieved: List[Dict[str, Any]], client: Anthropic) -> str:
     context = build_context(retrieved)
-    system_prompt = """You are InsureIQ, an expert insurance claims specialist assistant with deep knowledge of health insurance policy, coverage rules, ACA regulations, and claims procedures.
-
-You answer questions using ONLY the provided policy documents. Your answers must:
-1. Directly address the member's specific question
-2. Cite which source document(s) you are drawing from (use [SOURCE N] notation)
-3. Be clear about financial implications when relevant (deductibles, coinsurance, balance billing)
-4. Flag important exclusions or conditions that apply
-5. Recommend in-network or Center of Excellence options when appropriate for cost savings
-6. Be factual, precise, and helpful — not overly cautious or vague
-7. If the answer involves calculations (e.g., OON financial exposure), show the math step-by-step
-
-Format your response with:
-- A direct answer to the question
-- Supporting details from the policy documents
-- Any important caveats or exclusions
-- A recommendation if appropriate"""
-
     user_message = f"""Member Question: {query}
 
 Relevant Policy Documents:
 {context}
 
-Please provide a comprehensive, accurate answer based strictly on the above policy documents."""
-
+Return a structured answer with citations to the sources above."""
     try:
-        response = client.messages.create(
+        resp = client.messages.create(
             model=MODEL,
-            max_tokens=1000,
-            system=system_prompt,
+            max_tokens=900,
+            system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_message}],
         )
-        return response.content[0].text
+        return resp.content[0].text
     except anthropic.APIStatusError as e:
-        # 4xx/5xx with structured payload. Streamlit may redact the original message;
-        # surface enough detail to debug without leaking secrets.
+        # Shows actual status code + whatever the SDK exposes (better than Streamlit’s redaction alone)
         st.error(f"Anthropic API error {e.status_code}: {getattr(e, 'message', str(e))}")
+        # If Streamlit Cloud logs are available, this typically contains a helpful payload
         try:
             st.code(getattr(e, "response", None))
         except Exception:
@@ -265,18 +407,20 @@ Please provide a comprehensive, accurate answer based strictly on the above poli
         st.error(f"Anthropic API error: {str(e)}")
         raise
 
-# ─────────────────────────────────────────────
-# Sample Queries
-# ─────────────────────────────────────────────
-SAMPLE_QUERIES = [
-    {"label": "🏥 In-network vs out-of-network cost", "q": "What is my out-of-network financial exposure for a surgery?"},
-    {"label": "💊 Prescription coverage question", "q": "Does the plan cover insulin and what are the copays?"},
-    {"label": "🧾 Deductible & coinsurance", "q": "How do deductible and coinsurance apply for an MRI?"},
-    {"label": "🚑 ER coverage", "q": "If I go to the emergency room out-of-network, is it covered?"},
-]
 
 # ─────────────────────────────────────────────
-# Main layout
+# Sample queries (your “quick questions” + complex)
+# ─────────────────────────────────────────────
+SAMPLE_QUERIES = [
+    {"label": "🏥 In-network vs out-of-network cost", "q": "What is my out-of-network financial exposure for a surgery? Include balance billing risk and any caps, if stated."},
+    {"label": "💊 Prescription coverage question", "q": "Does the plan cover insulin and what are the copays? Also note any formulary or prior authorization requirements."},
+    {"label": "🧾 Deductible & coinsurance", "q": "How do deductible and coinsurance apply for an MRI? Explain what I pay before and after the deductible is met."},
+    {"label": "🚑 ER coverage", "q": "If I go to an out-of-network emergency room, is it covered as in-network? What conditions apply?"},
+]
+
+
+# ─────────────────────────────────────────────
+# Main layout (NO tabs → avoids empty tab bars)
 # ─────────────────────────────────────────────
 left, right = st.columns([1.1, 0.9], gap="large")
 
@@ -284,18 +428,18 @@ with left:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("### 💬 Ask a policy question")
 
-    # Sample queries
+    # Sample query buttons
     sq_cols = st.columns(2)
     for i, item in enumerate(SAMPLE_QUERIES):
         with sq_cols[i % 2]:
-            if st.button(item["label"]):
-                st.session_state.query = item["q"]
+            if st.button(item["label"], use_container_width=True):
+                st.session_state["query"] = item["q"]
 
     query_input = st.text_area(
         "Your question",
         value=st.session_state.get("query", ""),
         height=120,
-        placeholder="E.g., Is a knee replacement covered if done out-of-network? What will I owe?",
+        placeholder="E.g., Is a knee replacement covered out-of-network? What will I owe?",
     )
 
     run_btn = st.button("🔎 Retrieve + Answer", type="primary", use_container_width=True)
@@ -304,62 +448,83 @@ with left:
     st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
     st.markdown("### 📚 Corpus status")
     if corpus:
-        st.write(f"Loaded **{len(corpus)}** document chunks from `data/corpus.json`.")
-        st.caption("If you see weak retrieval, ensure your corpus chunks contain enough policy text and metadata.")
+        st.write(f"Loaded **{len(corpus)}** chunks from JSON files in this repo folder.")
+        st.caption("This app reads all *.json files next to app.py and auto-chunks them for retrieval.")
+        with st.expander("Show loaded JSON files", expanded=False):
+            files = [p.name for p in sorted(BASE_DIR.glob("*.json"))]
+            st.write(files)
     else:
-        st.warning("No corpus loaded. Add `data/corpus.json` with policy chunks (list of {id,title,text,source}).")
+        st.warning("No JSON corpus loaded. Ensure your policy JSON files are in the same folder as app.py.")
     st.markdown("</div>", unsafe_allow_html=True)
+
+    if show_workflow:
+        st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
+        st.markdown("### 📈 Workflow Demo (Interactive)")
+        render_workflow_demo(height=860)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 with right:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("### 🧠 Answer")
-    answer_box = st.empty()
+    if st.session_state.get("answer"):
+        st.markdown(st.session_state["answer"])
+    else:
+        st.info("Ask a question to generate an answer.")
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
     st.markdown("### 🧩 Retrieved Sources")
-    retrieved_box = st.empty()
+    retrieved_state = st.session_state.get("retrieved", [])
+    if retrieved_state:
+        for i, r in enumerate(retrieved_state, start=1):
+            st.markdown(
+                f"**[SOURCE {i}] {r.get('title','')}**  \n"
+                f"<span class='mono'>score={r.get('score',0):.3f} | origin={r.get('source','')}</span>",
+                unsafe_allow_html=True,
+            )
+            if show_doc_preview:
+                txt = (r.get("text") or "").strip()
+                st.caption(txt[:340] + ("…" if len(txt) > 340 else ""))
+            st.write("")
+    else:
+        st.warning("No sources retrieved yet.")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
-    st.markdown("### 🧪 Pipeline Log")
-    log_box = st.empty()
-    st.markdown("</div>", unsafe_allow_html=True)
+    if show_pipeline:
+        st.markdown('<div class="card" style="margin-top:16px;">', unsafe_allow_html=True)
+        st.markdown("### 🧪 Pipeline Log")
+        if st.session_state.get("pipeline_log"):
+            st.json(st.session_state["pipeline_log"])
+        else:
+            st.caption("Pipeline steps will appear after you run a query.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
 # ─────────────────────────────────────────────
 # Run pipeline
 # ─────────────────────────────────────────────
 if run_btn:
+    st.session_state["query"] = query_input
+
     if not api_key:
         st.error("⚠️ No API key configured. Add ANTHROPIC_API_KEY to Streamlit Secrets or enter it in the sidebar.")
     elif st.session_state.query_count >= QUERY_LIMIT:
-        st.warning(
-            f"⏳ You've reached the session limit of {QUERY_LIMIT} queries. "
-            "Refresh the page to start a new session."
-        )
+        st.warning(f"⏳ You’ve reached the session limit of {QUERY_LIMIT} queries. Refresh the page to start a new session.")
+    elif not corpus or not bm25_idx:
+        st.error("No policy documents loaded. Add your JSON policy files next to app.py.")
     else:
         st.session_state.query_count += 1
-        st.session_state.query = query_input
 
-        client = Anthropic(api_key=api_key)
-
-        t_start = time.time()
+        t0 = time.time()
         pipeline_log = []
 
-        # Step 1 — Tokenize
-        tokens = tokenize(query_input)
-        pipeline_log.append({
-            "step": "tokenize",
-            "tokens_preview": tokens[:20],
-            "token_count": len(tokens),
-        })
-
-        # Step 2 — Retrieve
-        retrieved = retrieve(query_input, corpus, top_k=TOP_K)
-        # Apply score filter
+        # Step 1 — retrieve
+        retrieved = retrieve_bm25(query_input, corpus, bm25_idx, top_k=TOP_K)
+        # Score filter (keep 0.0 by default for demo reliability)
         retrieved_f = [r for r in retrieved if r["score"] >= MIN_SCORE]
+
         pipeline_log.append({
-            "step": "retrieve",
+            "step": "retrieve_bm25",
             "requested_top_k": TOP_K,
             "min_score": MIN_SCORE,
             "returned": len(retrieved),
@@ -367,43 +532,38 @@ if run_btn:
             "top_scores": [round(r["score"], 3) for r in retrieved[:min(5, len(retrieved))]],
         })
 
-        # Show retrieved in UI
-        if retrieved_f:
-            with retrieved_box.container():
-                for i, r in enumerate(retrieved_f, start=1):
-                    st.markdown(
-                        f"**[SOURCE {i}] {r['title']}**  \n"
-                        f"<span class='mono'>score={r['score']:.3f} | origin={r.get('source','')}</span>",
-                        unsafe_allow_html=True,
-                    )
-                    st.caption((r.get("text", "") or "")[:300] + ("..." if len((r.get("text","") or "")) > 300 else ""))
-                    st.write("")
-        else:
-            retrieved_box.warning("No sources passed the score threshold. Try lowering the min score or improving corpus chunking.")
+        st.session_state["retrieved"] = retrieved_f
 
-        # Step 3 — Generate answer (only if we have some evidence)
-        if retrieved_f:
+        # Step 2 — generate (only if some evidence exists)
+        if not retrieved_f:
+            st.session_state["answer"] = "No answer generated because no sources were retrieved with sufficient score."
+            pipeline_log.append({"step": "generate", "status": "skipped_no_sources"})
+        else:
+            client = Anthropic(api_key=api_key)
             try:
                 answer = generate_answer(query_input, retrieved_f, client)
-                answer_box.markdown(answer)
+                st.session_state["answer"] = answer
+                pipeline_log.append({"step": "generate", "status": "ok"})
             except Exception:
-                # Error details are already displayed in generate_answer()
-                answer_box.error("Generation failed. See the error above for details.")
-        else:
-            answer_box.info("No answer generated because no sources were retrieved with sufficient score.")
+                # Error already shown in UI by generate_answer
+                st.session_state["answer"] = "Generation failed. See the error above for details."
+                pipeline_log.append({"step": "generate", "status": "failed"})
 
         pipeline_log.append({
             "step": "timing",
-            "seconds_total": round(time.time() - t_start, 3),
+            "seconds_total": round(time.time() - t0, 3),
         })
+        st.session_state["pipeline_log"] = pipeline_log
 
-        log_box.json(pipeline_log)
+        # force UI refresh with updated session state
+        st.rerun()
+
 
 # ─────────────────────────────────────────────
 # Footer
 # ─────────────────────────────────────────────
 st.markdown("<hr/>", unsafe_allow_html=True)
 st.caption(
-    "Tip: If you still see redacted Anthropic errors in Streamlit, enable SDK debug logs by setting "
-    "`ANTHROPIC_LOG=debug` in your deployment environment variables."
+    "Tip: If Streamlit still redacts errors, set the environment variable ANTHROPIC_LOG=debug "
+    "and check your deployment logs for the underlying API response."
 )
