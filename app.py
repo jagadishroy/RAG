@@ -118,18 +118,46 @@ MIN_SCORE = st.sidebar.slider("Min score threshold", min_value=0.0, max_value=1.
 # ─────────────────────────────────────────────
 # Data / corpus loading (simple local JSON store)
 # ─────────────────────────────────────────────
-DATA_DIR = Path(__file__).parent / "data"
-DEFAULT_CORPUS_PATH = DATA_DIR / "corpus.json"
+# ─────────────────────────────────────────────
+# Load ALL JSON policy files dynamically
+# ─────────────────────────────────────────────
 
-def load_corpus(path: Path) -> list[dict]:
-    if not path.exists():
-        return []
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return []
+BASE_DIR = Path(__file__).parent
 
-corpus = load_corpus(DEFAULT_CORPUS_PATH)
+def load_all_policy_files():
+    corpus = []
+    json_files = list(BASE_DIR.glob("*.json"))
+
+    for file_path in json_files:
+        try:
+            data = json.loads(file_path.read_text(encoding="utf-8"))
+
+            # If file already contains chunks list
+            if isinstance(data, list):
+                for i, item in enumerate(data):
+                    corpus.append({
+                        "id": f"{file_path.stem}_{i}",
+                        "title": file_path.stem.replace("_", " ").title(),
+                        "text": json.dumps(item) if isinstance(item, dict) else str(item),
+                        "source": file_path.name
+                    })
+
+            # If file is a single dictionary
+            elif isinstance(data, dict):
+                corpus.append({
+                    "id": file_path.stem,
+                    "title": file_path.stem.replace("_", " ").title(),
+                    "text": json.dumps(data, indent=2),
+                    "source": file_path.name
+                })
+
+        except Exception as e:
+            st.warning(f"Could not load {file_path.name}: {e}")
+
+    return corpus
+
+
+corpus = load_all_policy_files()
 
 # ─────────────────────────────────────────────
 # Minimal retrieval utilities (simple token overlap score)
