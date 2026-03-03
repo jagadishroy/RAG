@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Claims Processing — Workflow Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f9f8f5;
+    --surface3: #f0eeea;
+    --border: #e4e0d8;
+    --border-strong: #cdc9be;
+    --red: #d63c3c;
+    --red-soft: #fef2f2;
+    --red-mid: #fde0e0;
+    --red-text: #991b1b;
+    --green: #0d7a5f;
+    --green-soft: #f0faf6;
+    --green-mid: #d1f0e6;
+    --green-text: #064e3b;
+    --violet: #6d42c9;
+    --violet-soft: #f4f0fc;
+    --violet-mid: #ddd4f8;
+    --violet-text: #4c1d95;
+    --blue: #2563c4;
+    --blue-soft: #eff6ff;
+    --blue-mid: #dbeafe;
+    --amber: #b45309;
+    --amber-soft: #fffbeb;
+    --amber-mid: #fde68a;
+    --text: #1a1814;
+    --text2: #4a4640;
+    --muted: #8c8680;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --radius: 8px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
+
+  .header { text-align: center; padding: 56px 24px 44px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: 2.5px; color: var(--violet); text-transform: uppercase; margin-bottom: 14px; display: inline-flex; align-items: center; gap: 8px; }
+  .eyebrow::before, .eyebrow::after { content: ''; width: 28px; height: 1px; background: var(--violet-mid); }
+  .header h1 { font-size: clamp(26px, 4.5vw, 46px); font-weight: 700; line-height: 1.1; letter-spacing: -1.5px; }
+  .header h1 em { font-style: normal; color: var(--green); }
+  .header-sub { margin-top: 12px; color: var(--muted); font-size: 14.5px; }
+
+  .tabs-wrap { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; justify-content: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .tabs { display: flex; overflow-x: auto; }
+  .tab { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 14px 22px; border: none; background: transparent; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.18s; white-space: nowrap; font-weight: 500; }
+  .tab:hover { color: var(--text2); background: var(--surface2); }
+  .tab.t-before  { color: var(--red);    border-bottom-color: var(--red);    background: var(--red-soft); }
+  .tab.t-after   { color: var(--green);  border-bottom-color: var(--green);  background: var(--green-soft); }
+  .tab.t-arch    { color: var(--violet); border-bottom-color: var(--violet); background: var(--violet-soft); }
+  .tab.t-insight { color: var(--blue);   border-bottom-color: var(--blue);   background: var(--blue-soft); }
+
+  .panel { display: none; padding: 36px 24px 80px; max-width: 980px; margin: 0 auto; }
+  .panel.active { display: block; animation: slideUp 0.35s ease; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+  .sec-head { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .badge { font-family: var(--mono); font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; font-weight: 500; flex-shrink: 0; }
+  .badge-red    { background: var(--red-mid);    color: var(--red-text);    border: 1px solid #fca5a5; }
+  .badge-green  { background: var(--green-mid);  color: var(--green-text);  border: 1px solid #6ee7b7; }
+  .badge-violet { background: var(--violet-mid); color: var(--violet-text); border: 1px solid #c4b5fd; }
+  .badge-blue   { background: var(--blue-mid);   color: var(--blue);        border: 1px solid #93c5fd; }
+  .sec-head h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+
+  .flow { display: flex; flex-direction: column; }
+  .flow-line { width: 2px; height: 24px; margin-left: 25px; border-radius: 1px; }
+  .fl-red    { background: linear-gradient(180deg, #fca5a5, #fee2e2); }
+  .fl-green  { background: linear-gradient(180deg, #6ee7b7, #d1fae5); }
+  .fl-violet { background: linear-gradient(180deg, #c4b5fd, #ede9fe); }
+
+  .step { display: flex; gap: 14px; align-items: flex-start; }
+  .step-icon { width: 52px; height: 52px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+  .si-red    { background: var(--red-soft);    border-color: #fca5a5; }
+  .si-green  { background: var(--green-soft);  border-color: #6ee7b7; }
+  .si-blue   { background: var(--blue-soft);   border-color: #93c5fd; }
+  .si-violet { background: var(--violet-soft); border-color: #c4b5fd; }
+  .si-amber  { background: var(--amber-soft);  border-color: var(--amber-mid); }
+
+  .step-card { flex: 1; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); transition: box-shadow 0.2s, border-color 0.2s; }
+  .step-card:hover { box-shadow: var(--shadow); border-color: var(--border-strong); }
+  .step-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .step-title { font-size: 13.5px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
+  .chip { font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 500; flex-shrink: 0; }
+  .chip-red    { background: var(--red-mid);    color: var(--red-text); }
+  .chip-green  { background: var(--green-mid);  color: var(--green-text); }
+  .chip-violet { background: var(--violet-mid); color: var(--violet-text); }
+  .chip-muted  { background: var(--surface3);   color: var(--muted); }
+  .step-desc { margin-top: 5px; font-size: 12.5px; color: var(--text2); line-height: 1.6; }
+
+  .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+  @media(max-width:560px){ .doc-grid, .ai-steps-grid { grid-template-columns: 1fr; } }
+  .doc-row { display: flex; align-items: center; gap: 8px; padding: 7px 11px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; font-size: 11.5px; font-family: var(--mono); }
+  .doc-n { color: var(--red); font-weight: 700; min-width: 18px; font-size: 10px; }
+  .doc-t { flex: 1; color: var(--text2); }
+  .doc-d { color: var(--muted); font-size: 10px; margin-left: auto; }
+
+  .result-list { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+  .result-row { display: flex; align-items: center; gap: 12px; padding: 9px 14px; background: var(--green-soft); border: 1px solid var(--green-mid); border-radius: 6px; font-size: 12px; }
+  .rk { font-family: var(--mono); font-size: 10px; color: var(--green); font-weight: 700; min-width: 20px; }
+  .rn { flex: 1; color: var(--text); font-weight: 500; }
+  .scores { display: flex; gap: 6px; }
+  .sc { font-family: var(--mono); font-size: 9.5px; padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+  .sc-g { background: var(--green-mid); color: var(--green-text); }
+  .sc-b { background: var(--blue-mid); color: var(--blue); }
+
+  .ai-steps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px; }
+  .ai-step-row { display: flex; align-items: center; gap: 8px; padding: 7px 11px; background: var(--violet-soft); border: 1px solid var(--violet-mid); border-radius: 6px; font-size: 11.5px; font-family: var(--mono); }
+  .ai-n { color: var(--violet); font-weight: 700; min-width: 16px; font-size: 10px; }
+  .ai-t { flex: 1; color: var(--text2); }
+  .ai-d { color: var(--violet); font-size: 10px; margin-left: auto; }
+
+  .alert { margin-top: 28px; padding: 20px 22px; border-radius: var(--radius); border: 1px solid; }
+  .alert-red   { background: var(--red-soft);  border-color: #fca5a5; }
+  .alert-green { background: var(--green-soft); border-color: #6ee7b7; }
+  .alert-head { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
+  .alert-head-red   { color: var(--red-text); }
+  .alert-head-green { color: var(--green-text); }
+  .alert-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+  @media(max-width:560px){ .alert-grid2 { grid-template-columns: 1fr; } }
+  .al-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+  .al-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .al-dot-r { background: var(--red); }
+  .al-dot-g { background: var(--green); }
+
+  .compare-card { margin-top: 28px; padding: 22px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+  .compare-head { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; text-align: center; }
+  .cmp-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .cmp-lbl { font-size: 12px; font-weight: 500; color: var(--text2); width: 90px; flex-shrink: 0; }
+  .cmp-track { flex: 1; height: 10px; background: var(--surface3); border-radius: 5px; overflow: hidden; border: 1px solid var(--border); }
+  .cmp-fill { height: 100%; border-radius: 5px; }
+  .cmp-fill-r { background: linear-gradient(90deg, var(--red), #f87171); }
+  .cmp-fill-g { background: linear-gradient(90deg, var(--green), #34d399); }
+  .cmp-num { font-family: var(--mono); font-size: 11px; width: 70px; text-align: right; flex-shrink: 0; }
+  .cmp-num-r { color: var(--red-text); }
+  .cmp-num-g { color: var(--green-text); }
+  .cmp-footer { text-align: center; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+  .arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media(max-width:600px){ .arch-grid { grid-template-columns: 1fr; } }
+  .arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; }
+  .arch-card-top { padding: 4px 16px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
+  .act-violet { background: var(--violet-mid); color: var(--violet-text); }
+  .act-red    { background: var(--red-mid);    color: var(--red-text); }
+  .act-green  { background: var(--green-mid);  color: var(--green-text); }
+  .act-blue   { background: var(--blue-mid);   color: var(--blue); }
+  .act-amber  { background: var(--amber-mid);  color: var(--amber); }
+  .arch-card-body { padding: 16px; }
+  .arch-card-title { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 10px; }
+  .spec-list { display: flex; flex-direction: column; }
+  .spec-item { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .spec-item:last-child { border-bottom: none; }
+  .sk { color: var(--muted); font-family: var(--mono); font-size: 10.5px; }
+  .sv { font-weight: 600; color: var(--text); }
+  .arch-full { grid-column: 1 / -1; }
+  .kb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  @media(max-width:480px){ .kb-grid { grid-template-columns: repeat(2,1fr); } }
+  .kb-cell { text-align: center; padding: 12px 8px; background: var(--amber-soft); border: 1px solid var(--amber-mid); border-radius: 6px; }
+  .kb-num { font-size: 22px; font-weight: 700; color: var(--amber); font-family: var(--mono); }
+  .kb-lbl { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+  @media(max-width:600px){ .metrics-row { grid-template-columns: repeat(2,1fr); } }
+  .metric-card { text-align: center; padding: 18px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+  .mv { font-family: var(--mono); font-size: 22px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .ml { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Insights */
+  .insight-hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  @media(max-width:620px){ .insight-hero { grid-template-columns: 1fr; } }
+  .hero-card { text-align: center; padding: 24px 16px; border-radius: var(--radius); border: 1px solid; }
+  .hc-red    { background: var(--red-soft);    border-color: #fca5a5; }
+  .hc-green  { background: var(--green-soft);  border-color: #6ee7b7; }
+  .hc-violet { background: var(--violet-soft); border-color: #c4b5fd; }
+  .hero-icon { font-size: 28px; margin-bottom: 10px; }
+  .hero-num  { font-family: var(--mono); font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .hero-num-r { color: var(--red); }
+  .hero-num-g { color: var(--green); }
+  .hero-num-v { color: var(--violet); }
+  .hero-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+  .compare-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); font-size: 13px; }
+  .compare-table thead th { padding: 12px 16px; font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; text-align: left; background: var(--surface2); border-bottom: 2px solid var(--border); color: var(--muted); }
+  .compare-table thead th:nth-child(2) { color: var(--red-text); }
+  .compare-table thead th:nth-child(3) { color: var(--green-text); }
+  .compare-table tbody td { padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  .compare-table tbody tr:last-child td { border-bottom: none; }
+  .compare-table tbody tr:hover td { background: var(--surface2); }
+  .td-label  { font-weight: 600; color: var(--text); font-size: 12.5px; }
+  .td-before { color: var(--red-text);   background: var(--red-soft); }
+  .td-after  { color: var(--green-text); background: var(--green-soft); }
+
+  .bar-chart-wrap { margin-top: 28px; }
+  .bar-section-title { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; text-align: center; }
+  .bar-group { margin-bottom: 18px; }
+  .bar-label { font-size: 12.5px; font-weight: 600; color: var(--text2); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .bar-pair { display: flex; flex-direction: column; gap: 4px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-tag { font-family: var(--mono); font-size: 9.5px; width: 60px; flex-shrink: 0; color: var(--muted); }
+  .bar-track { flex: 1; height: 12px; background: var(--surface3); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .bar-fill { height: 100%; border-radius: 6px; }
+  .bf-r { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .bf-g { background: linear-gradient(90deg, var(--green), #34d399); }
+  .bar-val { font-family: var(--mono); font-size: 10.5px; width: 56px; text-align: right; flex-shrink: 0; color: var(--text2); font-weight: 600; }
+
+  .insight-callout { margin-top: 28px; padding: 20px 24px; background: linear-gradient(135deg, var(--blue-soft) 0%, var(--violet-soft) 100%); border: 1px solid var(--blue-mid); border-radius: var(--radius); }
+  .ic-head { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--blue); font-weight: 700; margin-bottom: 12px; }
+  .ic-list { display: flex; flex-direction: column; gap: 8px; }
+  .ic-item { display: flex; gap: 10px; font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .ic-num { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--blue); background: var(--blue-mid); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Insurance Claims Processing</div>
+  <h1>Knowledge Retrieval<br><em>Before vs. After AI</em></h1>
+  <p class="header-sub">RAG-Powered Semantic Search — Workflow Comparison &amp; Architecture</p>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab t-before" onclick="show('before',this,'t-before')">⚠ Without AI</button>
+    <button class="tab" onclick="show('after',this,'t-after')">✦ With AI</button>
+    <button class="tab" onclick="show('arch',this,'t-arch')">◈ RAG Architecture</button>
+    <button class="tab" onclick="show('insight',this,'t-insight')">◉ Insights</button>
+  </div>
+</div>
+
+<!-- BEFORE -->
+<div class="panel active" id="panel-before">
+  <div class="sec-head">
+    <span class="badge badge-red">Manual Process</span>
+    <h2>Without AI — Human-Only Retrieval</h2>
+  </div>
+  <div class="flow">
+    <div class="step">
+      <div class="step-icon si-blue">📞</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Customer Call Received</span><span class="chip chip-muted">T + 0 sec</span></div>
+        <p class="step-desc">45-year-old customer with diabetes, $75K out-of-network cardiac surgery, recently switched plans. Complex multi-condition query.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-red"></div>
+    <div class="step">
+      <div class="step-icon si-red">👤</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Specialist Receives Query</span><span class="chip chip-muted">T + 1 min</span></div>
+        <p class="step-desc">Must manually determine eligibility. Identifies need to check multiple policy documents across different categories.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-red"></div>
+    <div class="step">
+      <div class="step-icon si-red">🔍</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Keyword Search — Internal Portal</span><span class="chip chip-red">3–5 min</span></div>
+        <p class="step-desc">Searches "diabetes", "premium health", "surgery". Returns 50+ documents. Must manually scan each to assess relevance.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-red"></div>
+    <div class="step">
+      <div class="step-icon si-red">📄</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Manual Document Review — 7 Sources</span><span class="chip chip-red">29–49 min</span></div>
+        <div class="doc-grid">
+          <div class="doc-row"><span class="doc-n">01</span><span class="doc-t">Premium Health Eligibility</span><span class="doc-d">5–7 min</span></div>
+          <div class="doc-row"><span class="doc-n">02</span><span class="doc-t">Grace Period Policy</span><span class="doc-d">3–5 min</span></div>
+          <div class="doc-row"><span class="doc-n">03</span><span class="doc-t">Pre-existing Conditions</span><span class="doc-d">4–6 min</span></div>
+          <div class="doc-row"><span class="doc-n">04</span><span class="doc-t">Coverage Limits</span><span class="doc-d">5–8 min</span></div>
+          <div class="doc-row"><span class="doc-n">05</span><span class="doc-t">Network Provider Rules</span><span class="doc-d">4–6 min</span></div>
+          <div class="doc-row"><span class="doc-n">06</span><span class="doc-t">Employment Status Impact</span><span class="doc-d">3–5 min</span></div>
+          <div class="doc-row"><span class="doc-n">07</span><span class="doc-t">Cardiac Procedure Coverage</span><span class="doc-d">5–7 min</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-line fl-red"></div>
+    <div class="step">
+      <div class="step-icon si-amber">🧠</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Cross-Reference All Conditions</span><span class="chip chip-red">5–8 min</span></div>
+        <p class="step-desc">Manually verify each parameter. High cognitive load. Risk of missing critical exclusions, especially during peak hours.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-red"></div>
+    <div class="step">
+      <div class="step-icon si-red">✍️</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Make Eligibility Determination</span><span class="chip chip-red">3–5 min</span></div>
+        <p class="step-desc">Based on personal interpretation. No confidence scoring. No audit trail. Results vary significantly between specialists.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-red"></div>
+    <div class="step">
+      <div class="step-icon si-red">📞</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Respond to Customer</span><span class="chip chip-red">Total: 45–48 min</span></div>
+        <p class="step-desc">Customer has been waiting. Satisfaction impacted. No traceable record of sources consulted.</p>
+      </div>
+    </div>
+  </div>
+  <div class="alert alert-red">
+    <div class="alert-head alert-head-red">✕  Critical Issues with Manual Process</div>
+    <div class="alert-grid2">
+      <div class="al-item"><span class="al-dot al-dot-r"></span>45–48 minutes per complex query</div>
+      <div class="al-item"><span class="al-dot al-dot-r"></span>Inconsistent results per specialist</div>
+      <div class="al-item"><span class="al-dot al-dot-r"></span>Risk of missing critical exclusions</div>
+      <div class="al-item"><span class="al-dot al-dot-r"></span>No confidence score or audit trail</div>
+      <div class="al-item"><span class="al-dot al-dot-r"></span>High cognitive load at peak hours</div>
+      <div class="al-item"><span class="al-dot al-dot-r"></span>Poor customer satisfaction scores</div>
+    </div>
+  </div>
+</div>
+
+<!-- AFTER -->
+<div class="panel" id="panel-after">
+  <div class="sec-head">
+    <span class="badge badge-green">AI-Powered</span>
+    <h2>With AI — RAG Semantic Retrieval</h2>
+  </div>
+  <div class="flow">
+    <div class="step">
+      <div class="step-icon si-blue">📞</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Customer Call Received</span><span class="chip chip-muted">T + 0 sec</span></div>
+        <p class="step-desc">45-year-old customer with diabetes, $75K out-of-network cardiac surgery, recently switched plans.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-green"></div>
+    <div class="step">
+      <div class="step-icon si-green">👤</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Specialist Enters Natural Language Query</span><span class="chip chip-green">~30 sec</span></div>
+        <p class="step-desc">Types full scenario in plain English into the AI portal. No keyword guessing required.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-violet"></div>
+    <div class="step">
+      <div class="step-icon si-violet">🤖</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">AI Semantic Engine Processes Query</span><span class="chip chip-violet">&lt; 300 ms</span></div>
+        <div class="ai-steps-grid">
+          <div class="ai-step-row"><span class="ai-n">1</span><span class="ai-t">Query → 384-dim embedding</span><span class="ai-d">&lt;50ms</span></div>
+          <div class="ai-step-row"><span class="ai-n">2</span><span class="ai-t">FAISS search 50+ docs</span><span class="ai-d">&lt;100ms</span></div>
+          <div class="ai-step-row"><span class="ai-n">3</span><span class="ai-t">Cosine similarity ranking</span><span class="ai-d">&lt;50ms</span></div>
+          <div class="ai-step-row"><span class="ai-n">4</span><span class="ai-t">Top-K passage retrieval</span><span class="ai-d">&lt;20ms</span></div>
+          <div class="ai-step-row"><span class="ai-n">5</span><span class="ai-t">Verbatim accuracy scoring</span><span class="ai-d">&lt;30ms</span></div>
+          <div class="ai-step-row"><span class="ai-n">6</span><span class="ai-t">Confidence labels assigned</span><span class="ai-d">&lt;20ms</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-line fl-green"></div>
+    <div class="step">
+      <div class="step-icon si-green">📊</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">AI Presents Ranked Results</span><span class="chip chip-muted">Instant</span></div>
+        <div class="result-list">
+          <div class="result-row"><span class="rk">#1</span><span class="rn">Premium Health Eligibility</span><div class="scores"><span class="sc sc-g">Sim 92%</span><span class="sc sc-b">Verb 87%</span></div></div>
+          <div class="result-row"><span class="rk">#2</span><span class="rn">Grace Period Policy</span><div class="scores"><span class="sc sc-g">Sim 88%</span><span class="sc sc-b">Verb 82%</span></div></div>
+          <div class="result-row"><span class="rk">#3</span><span class="rn">Pre-existing Conditions Guide</span><div class="scores"><span class="sc sc-g">Sim 85%</span><span class="sc sc-b">Verb 79%</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-line fl-green"></div>
+    <div class="step">
+      <div class="step-icon si-green">👤</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Specialist Reviews AI Recommendations</span><span class="chip chip-green">2–3 min</span></div>
+        <p class="step-desc">Human-in-the-loop review. Specialist validates top results, reads cited passages, applies professional judgment.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-green"></div>
+    <div class="step">
+      <div class="step-icon si-green">✅</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Final Determination + Audit Trail</span><span class="chip chip-green">1–2 min</span></div>
+        <p class="step-desc">Decision logged with source citations and confidence scores. Full audit trail generated automatically for compliance.</p>
+      </div>
+    </div>
+    <div class="flow-line fl-green"></div>
+    <div class="step">
+      <div class="step-icon si-green">📞</div>
+      <div class="step-card">
+        <div class="step-row"><span class="step-title">Respond to Customer</span><span class="chip chip-green">Total: 6–8 min</span></div>
+        <p class="step-desc">Confident, consistent, and fast. Improved NPS. Every decision traceable to source documents.</p>
+      </div>
+    </div>
+  </div>
+  <div class="compare-card">
+    <div class="compare-head">Resolution Time Comparison</div>
+    <div class="cmp-row">
+      <span class="cmp-lbl">Without AI</span>
+      <div class="cmp-track"><div class="cmp-fill cmp-fill-r" style="width:100%"></div></div>
+      <span class="cmp-num cmp-num-r">45–48 min</span>
+    </div>
+    <div class="cmp-row">
+      <span class="cmp-lbl">With AI</span>
+      <div class="cmp-track"><div class="cmp-fill cmp-fill-g" style="width:8%;min-width:14px"></div></div>
+      <span class="cmp-num cmp-num-g">6–8 min</span>
+    </div>
+    <div class="cmp-footer">6× faster resolution per complex query</div>
+  </div>
+  <div class="alert alert-green">
+    <div class="alert-head alert-head-green">✓  Benefits Unlocked with AI</div>
+    <div class="alert-grid2">
+      <div class="al-item"><span class="al-dot al-dot-g"></span>6× faster per complex query</div>
+      <div class="al-item"><span class="al-dot al-dot-g"></span>100% consistency across specialists</div>
+      <div class="al-item"><span class="al-dot al-dot-g"></span>Confidence + verbatim scoring</div>
+      <div class="al-item"><span class="al-dot al-dot-g"></span>Complete audit trail with citations</div>
+      <div class="al-item"><span class="al-dot al-dot-g"></span>Reduced cognitive load at peak hours</div>
+      <div class="al-item"><span class="al-dot al-dot-g"></span>Customer satisfaction improved</div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="panel" id="panel-arch">
+  <div class="sec-head">
+    <span class="badge badge-violet">RAG Architecture</span>
+    <h2>Technical System Design</h2>
+  </div>
+  <div class="arch-grid">
+    <div class="arch-card">
+      <div class="arch-card-top act-blue">Input Layer</div>
+      <div class="arch-card-body">
+        <div class="arch-card-title">Query Intake</div>
+        <div class="spec-list">
+          <div class="spec-item"><span class="sk">Format</span><span class="sv">Natural Language</span></div>
+          <div class="spec-item"><span class="sk">Interface</span><span class="sv">Claims Portal UI</span></div>
+          <div class="spec-item"><span class="sk">Latency</span><span class="sv" style="color:var(--blue)">&lt; 1 sec</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-top act-violet">Embedding Layer</div>
+      <div class="arch-card-body">
+        <div class="arch-card-title">Semantic Encoder</div>
+        <div class="spec-list">
+          <div class="spec-item"><span class="sk">Model</span><span class="sv">all-MiniLM-L6-v2</span></div>
+          <div class="spec-item"><span class="sk">Library</span><span class="sv">Sentence-Transformers</span></div>
+          <div class="spec-item"><span class="sk">Dimensions</span><span class="sv" style="color:var(--violet)">384-dim Vector</span></div>
+          <div class="spec-item"><span class="sk">Latency</span><span class="sv" style="color:var(--violet)">&lt; 50ms</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-top act-red">Index Layer</div>
+      <div class="arch-card-body">
+        <div class="arch-card-title">FAISS Vector DB</div>
+        <div class="spec-list">
+          <div class="spec-item"><span class="sk">Index Type</span><span class="sv">IndexFlatIP</span></div>
+          <div class="spec-item"><span class="sk">Similarity</span><span class="sv">Cosine Distance</span></div>
+          <div class="spec-item"><span class="sk">Coverage</span><span class="sv" style="color:var(--red)">50+ Documents</span></div>
+          <div class="spec-item"><span class="sk">Latency</span><span class="sv" style="color:var(--red)">&lt; 100ms</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-card">
+      <div class="arch-card-top act-green">Retrieval Layer</div>
+      <div class="arch-card-body">
+        <div class="arch-card-title">Result Scoring</div>
+        <div class="spec-list">
+          <div class="spec-item"><span class="sk">Output</span><span class="sv">Top-K Passages</span></div>
+          <div class="spec-item"><span class="sk">Similarity</span><span class="sv" style="color:var(--green)">92% / 88% / 85%</span></div>
+          <div class="spec-item"><span class="sk">Verbatim</span><span class="sv" style="color:var(--blue)">87% / 82% / 79%</span></div>
+          <div class="spec-item"><span class="sk">Confidence</span><span class="sv">HIGH / MED / LOW</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="arch-card arch-full">
+      <div class="arch-card-top act-amber">Knowledge Base</div>
+      <div class="arch-card-body">
+        <div class="arch-card-title">Insurance Document Corpus</div>
+        <div class="kb-grid">
+          <div class="kb-cell"><div class="kb-num">20</div><div class="kb-lbl">Eligibility Rules</div></div>
+          <div class="kb-cell"><div class="kb-num">15</div><div class="kb-lbl">Procedures</div></div>
+          <div class="kb-cell"><div class="kb-num">15</div><div class="kb-lbl">Compliance Docs</div></div>
+          <div class="kb-cell"><div class="kb-num">50+</div><div class="kb-lbl">Total Indexed</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="metrics-row">
+    <div class="metric-card"><div class="mv" style="color:var(--green)">&lt;300ms</div><div class="ml">End-to-end Latency</div></div>
+    <div class="metric-card"><div class="mv" style="color:var(--blue)">95%+</div><div class="ml">Retrieval Accuracy</div></div>
+    <div class="metric-card"><div class="mv" style="color:var(--violet)">100%</div><div class="ml">Decision Consistency</div></div>
+    <div class="metric-card"><div class="mv" style="color:var(--amber)">384</div><div class="ml">Vector Dimensions</div></div>
+  </div>
+</div>
+
+<!-- INSIGHTS -->
+<div class="panel" id="panel-insight">
+  <div class="sec-head">
+    <span class="badge badge-blue">Insights</span>
+    <h2>Before vs. After — Side-by-Side Comparison</h2>
+  </div>
+
+  <div class="insight-hero">
+    <div class="hero-card hc-red">
+      <div class="hero-icon">⚡</div>
+      <div class="hero-num hero-num-r">6×</div>
+      <div class="hero-label">Faster Resolution Time</div>
+    </div>
+    <div class="hero-card hc-green">
+      <div class="hero-icon">🎯</div>
+      <div class="hero-num hero-num-g">95%+</div>
+      <div class="hero-label">Retrieval Accuracy</div>
+    </div>
+    <div class="hero-card hc-violet">
+      <div class="hero-icon">🔒</div>
+      <div class="hero-num hero-num-v">100%</div>
+      <div class="hero-label">Decision Consistency</div>
+    </div>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>⚠ Without AI</th>
+        <th>✦ With AI</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="td-label">Resolution Time</td><td class="td-before">45–48 minutes per query</td><td class="td-after">6–8 minutes per query</td></tr>
+      <tr><td class="td-label">Search Method</td><td class="td-before">Keyword-based, manual scan</td><td class="td-after">Semantic NLP, vector similarity</td></tr>
+      <tr><td class="td-label">Docs Reviewed</td><td class="td-before">7 documents manually</td><td class="td-after">50+ indexed, top-3 surfaced</td></tr>
+      <tr><td class="td-label">Result Consistency</td><td class="td-before">Varies by specialist &amp; shift</td><td class="td-after">Identical results every query</td></tr>
+      <tr><td class="td-label">Confidence Scoring</td><td class="td-before">None — gut judgment only</td><td class="td-after">Similarity + verbatim % scores</td></tr>
+      <tr><td class="td-label">Audit Trail</td><td class="td-before">No record of sources used</td><td class="td-after">Full citation log per decision</td></tr>
+      <tr><td class="td-label">Cognitive Load</td><td class="td-before">High — especially at peak hours</td><td class="td-after">Low — AI handles heavy lifting</td></tr>
+      <tr><td class="td-label">Human Role</td><td class="td-before">End-to-end manual effort</td><td class="td-after">Review &amp; final judgment only</td></tr>
+      <tr><td class="td-label">Customer Experience</td><td class="td-before">Long wait, lower satisfaction</td><td class="td-after">Fast response, improved NPS</td></tr>
+      <tr><td class="td-label">Compliance Risk</td><td class="td-before">High — untracked decisions</td><td class="td-after">Low — fully traceable + auditable</td></tr>
+    </tbody>
+  </table>
+
+  <div class="bar-chart-wrap">
+    <div class="bar-section-title">Performance Metrics — Manual vs AI-Assisted</div>
+    <div class="bar-group">
+      <div class="bar-label"><span>Resolution Time</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">lower = better</span></div>
+      <div class="bar-pair">
+        <div class="bar-row"><span class="bar-tag">Manual</span><div class="bar-track"><div class="bar-fill bf-r" style="width:100%"></div></div><span class="bar-val" style="color:var(--red-text)">48 min</span></div>
+        <div class="bar-row"><span class="bar-tag">With AI</span><div class="bar-track"><div class="bar-fill bf-g" style="width:14%"></div></div><span class="bar-val" style="color:var(--green-text)">8 min</span></div>
+      </div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><span>Retrieval Accuracy</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">higher = better</span></div>
+      <div class="bar-pair">
+        <div class="bar-row"><span class="bar-tag">Manual</span><div class="bar-track"><div class="bar-fill bf-r" style="width:65%"></div></div><span class="bar-val" style="color:var(--red-text)">~65%</span></div>
+        <div class="bar-row"><span class="bar-tag">With AI</span><div class="bar-track"><div class="bar-fill bf-g" style="width:95%"></div></div><span class="bar-val" style="color:var(--green-text)">95%+</span></div>
+      </div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><span>Decision Consistency</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">higher = better</span></div>
+      <div class="bar-pair">
+        <div class="bar-row"><span class="bar-tag">Manual</span><div class="bar-track"><div class="bar-fill bf-r" style="width:55%"></div></div><span class="bar-val" style="color:var(--red-text)">~55%</span></div>
+        <div class="bar-row"><span class="bar-tag">With AI</span><div class="bar-track"><div class="bar-fill bf-g" style="width:100%"></div></div><span class="bar-val" style="color:var(--green-text)">100%</span></div>
+      </div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-label"><span>Documents Covered</span><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">higher = better</span></div>
+      <div class="bar-pair">
+        <div class="bar-row"><span class="bar-tag">Manual</span><div class="bar-track"><div class="bar-fill bf-r" style="width:14%"></div></div><span class="bar-val" style="color:var(--red-text)">7 docs</span></div>
+        <div class="bar-row"><span class="bar-tag">With AI</span><div class="bar-track"><div class="bar-fill bf-g" style="width:100%"></div></div><span class="bar-val" style="color:var(--green-text)">50+ docs</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-callout">
+    <div class="ic-head">◉ Key Takeaways</div>
+    <div class="ic-list">
+      <div class="ic-item"><span class="ic-num">1</span>AI reduces resolution time by approximately 83% — from 48 minutes to 8 minutes — while expanding coverage from 7 manually reviewed documents to 50+ semantically indexed ones.</div>
+      <div class="ic-item"><span class="ic-num">2</span>Human specialists are freed from retrieval work and can focus entirely on judgment and customer empathy — the highest-value parts of the interaction.</div>
+      <div class="ic-item"><span class="ic-num">3</span>Confidence scoring and verbatim matching together create a defensible, compliance-ready audit trail that manual processes simply cannot provide.</div>
+      <div class="ic-item"><span class="ic-num">4</span>100% repeatability eliminates specialist-to-specialist variance — directly reducing the regulatory liability exposure caused by inconsistent decisions.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function show(id, btn, cls) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('t-before','t-after','t-arch','t-insight'));
+    document.getElementById('panel-' + id).classList.add('active');
+    btn.classList.add(cls);
+  }
+</script>
+</body>
+</html>
